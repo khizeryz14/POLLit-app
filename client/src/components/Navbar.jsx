@@ -8,12 +8,14 @@ const Navbar = () => {
       <nav className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         
         {/* Logo */}
-        <div className="flex items-center gap-2 cursor-pointer">
-          <FiBarChart2 className="text-indigo-500 text-xl" />
-          <span className="text-xl font-logo tracking-wide">
-            POLLit
-          </span>
-        </div>
+        <Link to="/">
+          <div className="flex items-center gap-2 cursor-pointer">
+            <FiBarChart2 className="text-indigo-500 text-xl" />
+            <span className="text-xl font-logo tracking-wide">
+              POLLit
+            </span>
+          </div>
+        </Link>
 
         {/* Actions */}
         <div className="flex items-center gap-3">
@@ -34,19 +36,21 @@ const Navbar = () => {
             </button>
           </Link>
 
-          <button className="
-            flex items-center gap-2
-            px-4 py-2
-            rounded-xl
-            border border-slate-700
-            hover:border-slate-500
-            hover:bg-slate-900
-            transition-all duration-200
-            font-medium
-          ">
-            <FiLogIn />
-            Log In
-          </button>
+          <Link to="/auth">
+            <button className="
+              flex items-center gap-2
+              px-4 py-2
+              rounded-xl
+              border border-slate-700
+              hover:border-slate-500
+              hover:bg-slate-900
+              transition-all duration-200
+              font-medium
+            ">
+              <FiLogIn />
+              Log In
+            </button>
+          </Link>
 
         </div>
       </nav>
