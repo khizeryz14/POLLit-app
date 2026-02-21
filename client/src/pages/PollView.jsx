@@ -2,6 +2,9 @@ import React from "react";
 import VoteOptionButton from "../components/VoteOptionButton";
 import ResultsBar from "../components/ResultsBar";
 import defaultImage from "../assets/defaultPoll.jpg";
+import { useParams } from "react-router-dom";
+
+const pollID = {useParams}
 
 const PollView = () => {
   const poll = {

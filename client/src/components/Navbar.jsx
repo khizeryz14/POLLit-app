@@ -1,5 +1,6 @@
 import React from "react";
 import { FiBarChart2, FiPlusCircle, FiLogIn } from "react-icons/fi";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   return (
@@ -16,21 +17,22 @@ const Navbar = () => {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
-          
-          <button className="
-            flex items-center gap-2
-            px-4 py-2
-            rounded-xl
-            bg-indigo-600
-            hover:bg-indigo-500
-            active:scale-95
-            transition-all duration-200
-            font-medium
-            shadow-lg shadow-indigo-600/20
-          ">
-            <FiPlusCircle />
-            Create Poll
-          </button>
+          <Link to="/createPoll">
+            <button className="
+              flex items-center gap-2
+              px-4 py-2
+              rounded-xl
+              bg-indigo-600
+              hover:bg-indigo-500
+              active:scale-95
+              transition-all duration-200
+              font-medium
+              shadow-lg shadow-indigo-600/20
+            ">
+              <FiPlusCircle />
+              Create Poll
+            </button>
+          </Link>
 
           <button className="
             flex items-center gap-2
