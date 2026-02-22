@@ -3,21 +3,21 @@ import { FiGithub, FiTwitter, FiHeart } from "react-icons/fi";
 
 const Footer = () => {
   return (
-    <footer className="border-t border-slate-800 mt-12">
-      <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
+    <footer className="mt-12 border-t border-white/5 bg-black/20 backdrop-blur-lg">
+      <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-400">
         
         {/* Left */}
-        <div>
+        <div className="text-gray-500">
           © {new Date().getFullYear()} POLLit. All rights reserved.
         </div>
 
         {/* Center */}
-        <div className="flex items-center gap-1 text-slate-600">
+        <div className="flex items-center gap-1 text-gray-500">
           Built with <FiHeart className="text-indigo-500" /> using React & Tailwind
         </div>
 
         {/* Right / Socials */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 text-gray-500">
           <a
             href="#"
             className="hover:text-indigo-400 transition-colors"

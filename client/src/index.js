@@ -41,3 +41,9 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <RouterProvider router={router}/>
 );
+
+
+//need more work on Login <Navbar> situation, (FIXED)
+//Footer on CreatePoll is miscolored (FIXED)
+//Login/SignUp changing container size is annoying (Still there)
+//Need to fix the <main> issue

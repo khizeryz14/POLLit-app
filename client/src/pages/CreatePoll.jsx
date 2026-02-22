@@ -35,10 +35,10 @@ export default function CreatePoll() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f0f14] via-[#151521] to-[#0f0f14] flex items-center justify-center px-4">
+      <div className="w-full flex items-center justify-center px-4">      
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-2xl bg-[#181824]/90 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 text-white"
+        className="w-full max-w-2xl bg-[#181824]/90 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 text-white animate-[fadeIn_.3s_ease]"
       >
         {/* Header */}
         <div className="mb-8">

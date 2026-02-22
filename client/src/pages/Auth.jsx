@@ -4,9 +4,8 @@ export default function Auth() {
   const [mode, setMode] = useState("login");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f0f14] via-[#151521] to-[#0f0f14] flex items-center justify-center px-4">
-      
-      <div className="w-full max-w-md bg-[#181824]/90 backdrop-blur-xl border border-white/5 rounded-3xl shadow-2xl p-8 text-white">
+    <div className="flex-1 flex items-center justify-center px-4 overflow-x-hidden overflow-y-hidden">      
+      <div className="w-full max-w-md bg-[#181824]/90 backdrop-blur-xl border border-white/5 rounded-3xl shadow-2xl p-8 text-white animate-[fadeIn_.3s_ease]">
         
         {/* Toggle */}
         <div className="flex bg-white/5 rounded-2xl p-1 mb-8">

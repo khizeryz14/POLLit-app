@@ -26,7 +26,7 @@ const PollView = () => {
   };
 
   return (
-    <main className="max-w-3xl mx-auto p-6">
+    <main className="max-w-3xl mx-auto p-6 animate-[fadeIn_.3s_ease]">
       <div className="
         bg-slate-900/60
         backdrop-blur-md

@@ -38,13 +38,13 @@ const Home = () => {
   };
 
   return (
-    <main className="max-w-6xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6 animate-[fadeIn_.3s_ease]">
       <h1 className="text-3xl font-semibold tracking-tight mb-6">
         Trending Polls
       </h1>
 
       <PollGrid polls={mockPolls} onVote={handleVote} />
-    </main>
+    </div>
   );
 };
 
