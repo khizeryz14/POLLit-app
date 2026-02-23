@@ -60,7 +60,7 @@ export default function CreatePoll() {
             placeholder="Which technology will dominate the next decade?"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            className="w-full bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+            className="w-full bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:scale-[1.01] transition"
           />
         </div>
 
@@ -83,7 +83,7 @@ export default function CreatePoll() {
                   onChange={(e) =>
                     handleOptionChange(i, e.target.value)
                   }
-                  className="flex-1 bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                  className="flex-1 bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:scale-[1.01] focus:ring-indigo-500 transition"
                 />
 
                 <button
@@ -108,7 +108,7 @@ export default function CreatePoll() {
 
         {/* Submit */}
         <button
-          className="w-full mt-2 bg-gradient-to-r from-indigo-500 to-violet-600 hover:opacity-90 rounded-xl py-3 text-sm font-medium tracking-wide transition shadow-lg shadow-indigo-500/20"
+          className="w-full mt-2 bg-gradient-to-r from-indigo-500 to-violet-600 hover:opacity-90 rounded-xl py-3 text-sm font-medium tracking-wide transition shadow-lg shadow-indigo-500/20 transition-transform duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-95 hover:scale-[1.02]"
         >
           Create Poll
         </button>

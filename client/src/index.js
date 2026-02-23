@@ -7,6 +7,8 @@ import {createBrowserRouter, RouterProvider} from "react-router-dom"
 import CreatePoll from './pages/CreatePoll';
 import Auth from './pages/Auth';
 import RootLayout from './components/RootLayout';
+import { AuthProvider } from './context/AuthContext';
+import { PollProvider } from './context/PollContext';
 
 const router = createBrowserRouter([
     {
@@ -39,7 +41,11 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 
 
 root.render(
-    <RouterProvider router={router}/>
+    <AuthProvider>
+        <PollProvider>
+            <RouterProvider router={router}/>
+        </PollProvider>
+    </AuthProvider>
 );
 
 

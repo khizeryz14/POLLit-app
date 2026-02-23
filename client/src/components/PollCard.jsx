@@ -62,7 +62,7 @@ const PollCard = ({
                 border border-transparent hover:border-indigo-500/30
                 rounded-lg px-3 py-2
                 text-slate-300
-                transition-all duration-200
+                transition-transform duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-95 hover:scale-[1.02]
                 ${onVote ? "cursor-pointer" : "cursor-default"}
               `}
             >

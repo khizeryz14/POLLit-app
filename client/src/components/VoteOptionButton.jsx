@@ -12,8 +12,7 @@ const VoteOptionButton = ({ label, onClick }) => {
         hover:bg-indigo-600/20
         border border-slate-700 hover:border-indigo-500/40
         text-slate-200
-        transition-all duration-200
-        active:scale-[0.98]
+        transition-transform duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-95 hover:scale-[1.02]
       "
     >
       {label}

@@ -1,7 +1,5 @@
 import React from "react";
 import PollGrid from "../components/PollGrid";
-import defaultImage from "../assets/defaultPoll.jpg";
-
 const mockPolls = [
   {
     id: 1,
