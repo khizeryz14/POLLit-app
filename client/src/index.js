@@ -53,3 +53,4 @@ root.render(
 //Footer on CreatePoll is miscolored (FIXED)
 //Login/SignUp changing container size is annoying (Still there)
 //Need to fix the <main> issue
+//Need to understand CONTEXTS and STATES before moving any further with the UI
