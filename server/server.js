@@ -9,7 +9,6 @@ const PORT = 5000;
 const saltRounds = 10;
 
 app.use(express.json());
-
 app.use(express.urlencoded({extended: true}));
 app.use(cors());
 
@@ -62,6 +61,7 @@ app.post("/auth/login", async (req, res) => {
                     "email":queryResponse.rows[0].email
             };
 
+            console.log(`${user.username} with ${user.email} logged in!`)
             return res.status(200).json({user})
         }
         else{
@@ -92,9 +92,10 @@ app.post("/auth/register", async (req, res) => {
             email
         };
 
+        console.log(`${user.username} with ${user.email} registered!`)
         return res.status(201).json({user});
 
     }catch(error){
-        return res.status(500).json({"error":"Server error"})
+        return res.status(500).json({"message":"Server error"})
     }
 })

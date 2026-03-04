@@ -8,8 +8,9 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const { login } = useAuth();
+  const { login, register } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
@@ -17,8 +18,19 @@ export default function Auth() {
 
     try {
       setLoading(true);
-      await login(email); // mock login from context
-      navigate("/"); // redirect home
+      setError("");
+
+      if (mode === "login") {
+        await login(email, password);
+      } else {
+        await register(username, email, password);
+      }
+
+      navigate("/"); // redirect after success
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Authentication failed"
+      );
     } finally {
       setLoading(false);
     }
@@ -26,7 +38,7 @@ export default function Auth() {
 
   return (
     <div className="flex-1 flex items-center justify-center px-4 overflow-hidden">
-      <div className="w-full max-w-md bg-[#181824]/90 backdrop-blur-xl border border-white/5 rounded-3xl shadow-2xl p-8 text-white animate-[fadeIn_.3s_ease]">
+      <div className="w-full max-w-md bg-[#181824]/90 backdrop-blur-xl border border-white/5 rounded-3xl shadow-2xl p-8 text-white">
 
         {/* Toggle */}
         <div className="flex bg-white/5 rounded-2xl p-1 mb-8">
@@ -64,6 +76,13 @@ export default function Auth() {
           </p>
         </div>
 
+        {/* Error */}
+        {error && (
+          <p className="text-red-400 text-sm text-center mb-4">
+            {error}
+          </p>
+        )}
+
         {/* Form */}
         <div className="space-y-4">
           {mode === "signup" && (
@@ -72,7 +91,7 @@ export default function Auth() {
               placeholder="Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:scale-[1.01] focus:ring-indigo-500 transition"
+              className="w-full bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
             />
           )}
 
@@ -81,7 +100,7 @@ export default function Auth() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:scale-[1.01] focus:ring-indigo-500 transition"
+            className="w-full bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
           />
 
           <input
@@ -89,13 +108,13 @@ export default function Auth() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:scale-[1.01] focus:ring-2 focus:ring-indigo-500 transition"
+            className="w-full bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
           />
 
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className={`w-full mt-2 rounded-xl py-3 text-sm font-medium tracking-wide shadow-lg shadow-indigo-500/20 transition-transform duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-95 hover:scale-[1.02]
+            className={`w-full mt-2 rounded-xl py-3 text-sm font-medium transition active:scale-95
               ${
                 loading
                   ? "bg-indigo-400 cursor-not-allowed"

@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import api from "../api";
 
 const AuthContext = createContext();
 
@@ -22,17 +23,31 @@ export function AuthProvider({ children }) {
     }
   }, [user]);
 
-  /* Mock login */
-  const login = async (email) => {
-    await new Promise(r => setTimeout(r, 400)); // fake latency
-
-    const fakeUser = {
-      id: Date.now(),
-      name: email.split("@")[0],
+  /* LOGIN */
+  const login = async (email, password) => {
+    const { data } = await api.post("/auth/login", {
       email,
-    };
+      password,
+    });
 
-    setUser(fakeUser);
+    setUser(data.user);
+  };
+
+  /* REGISTER → auto login */
+  const register = async (username, email, password) => {
+    try{
+    const { data } = await api.post("/auth/register", {
+      username,
+      email,
+      password,
+    });
+
+    setUser(data.user);
+  }
+  catch(err){
+    console.log(err.response)
+    throw err;
+  }
   };
 
   const logout = () => {
@@ -40,7 +55,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
