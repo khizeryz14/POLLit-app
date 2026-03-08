@@ -1,3 +1,6 @@
+import dotenv from "dotenv"
+dotenv.config();
+
 import express from "express";
 import pg from "pg";
 import bcrypt from "bcrypt";
@@ -7,10 +10,11 @@ import cookieParser from "cookie-parser";
 import authenticateToken from "./middleware/authMiddleware.js";
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT;
 
-const saltRounds = 14;
-export const JWT_SECRET = "VERYSECRETIAM"
+const saltRounds = Number(process.env.SALT_ROUNDS);
+
+export const JWT_SECRET = process.env.JWT_SECRET
 
 app.use(cors({
     origin: "http://localhost:3000",
@@ -23,11 +27,11 @@ app.use(express.urlencoded({extended: true}));
 app.use(cookieParser())
 
 const db = new pg.Client({
-    user: "postgres",
-    host: "localhost",
-    database: "POLLit-app",
-    password: "admin",
-    port: 5432,
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
 })
 
 db.connect();
