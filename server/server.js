@@ -2,15 +2,25 @@ import express from "express";
 import pg from "pg";
 import bcrypt from "bcrypt";
 import cors from "cors";
+import jwt from "jsonwebtoken"
+import cookieParser from "cookie-parser";
+import authenticateToken from "./middleware/authMiddleware.js";
 
 const app = express();
 const PORT = 5000;
 
-const saltRounds = 10;
+const saltRounds = 14;
+export const JWT_SECRET = "VERYSECRETIAM"
+
+app.use(cors({
+    origin: "http://localhost:3000",
+    credentials: true
+}
+));
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
-app.use(cors());
+app.use(cookieParser())
 
 const db = new pg.Client({
     user: "postgres",
@@ -38,7 +48,7 @@ app.post("/polls", async (req, res) => {
     const pollOptions = req.body.options;
 })
 
-app.post("/votes", async (req, res) => {
+app.post("/votes", authenticateToken, async (req, res) => {
 
 })
 
@@ -62,6 +72,19 @@ app.post("/auth/login", async (req, res) => {
             };
 
             console.log(`${user.username} with ${user.email} logged in!`)
+
+            const token = jwt.sign({userId: user.id}, JWT_SECRET, {expiresIn: "7d"})
+            
+
+            res.cookie("token", token, {
+                httpOnly: true,
+                sameSite: "lax",
+                secure: false,
+                path: "/",
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+            });
+
+
             return res.status(200).json({user})
         }
         else{
@@ -92,10 +115,56 @@ app.post("/auth/register", async (req, res) => {
             email
         };
 
+        const token = jwt.sign({userId: user.id}, JWT_SECRET, {expiresIn: "7d"});
+
         console.log(`${user.username} with ${user.email} registered!`)
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: false,
+            path: "/",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+
         return res.status(201).json({user});
 
     }catch(error){
         return res.status(500).json({"message":"Server error"})
     }
+})
+
+app.get("/auth/me", authenticateToken, async (req, res) => {
+    try{
+        const query = 'SELECT id, username, email FROM users WHERE id = $1';
+        const results = await db.query(query, [req.user]);
+
+        if(results.rows.length === 0){
+            return res.status(401).json({"message": "User does not exist"});
+        }
+        else{
+            const user = {
+                id: results.rows[0].id,
+                username: results.rows[0].username,
+                email: results.rows[0].email,
+            };
+
+            return res.status(200).json({user});
+        }
+    }
+    catch(err){
+        return res.status(500).json({"message": "Authentication error"});
+    }
+})
+
+app.post("/auth/logout", (req, res) => {
+
+    res.clearCookie("token", {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false,
+        path: "/"
+    });
+    
+    return res.json({"message": "Logged out"});
 })

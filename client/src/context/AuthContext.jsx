@@ -6,22 +6,30 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
 
-  /* Load user from localStorage on refresh */
+  /* Load user from cookie on refresh */
   useEffect(() => {
-    const storedUser = localStorage.getItem("pollit_user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+
+    const fetchUser = async() => {
+      try{
+        const {data} = await api.get("/auth/me");
+        setUser(data.user);
+      }catch{
+        setUser(null);
+      }
+    };
+
+    fetchUser();
+
   }, []);
 
   /* Persist user */
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem("pollit_user", JSON.stringify(user));
-    } else {
-      localStorage.removeItem("pollit_user");
-    }
-  }, [user]);
+  // useEffect(() => {
+  //   if (user) {
+  //     localStorage.setItem("pollit_user", JSON.stringify(user));
+  //   } else {
+  //     localStorage.removeItem("pollit_user");
+  //   }
+  // }, [user]);
 
   /* LOGIN */
   const login = async (email, password) => {
@@ -50,7 +58,8 @@ export function AuthProvider({ children }) {
   }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await api.post("/auth/logout")
     setUser(null);
   };
 
