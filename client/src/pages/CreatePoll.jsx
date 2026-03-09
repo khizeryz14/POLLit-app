@@ -1,7 +1,11 @@
 import { useState } from "react";
+import { usePoll } from "../context/PollContext";
 
 export default function CreatePoll() {
+  const { createPoll } = usePoll();
+
   const [question, setQuestion] = useState("");
+  const [description, setDescription] = useState("");
   const [options, setOptions] = useState(["", ""]);
 
   const handleOptionChange = (index, value) => {
@@ -20,7 +24,7 @@ export default function CreatePoll() {
     setOptions(options.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const cleanOptions = options.filter(o => o.trim() !== "");
@@ -30,16 +34,17 @@ export default function CreatePoll() {
       return;
     }
 
-    console.log({ question, options: cleanOptions });
-    alert("Poll created (mock)");
+    await createPoll(question, cleanOptions, description || null);
   };
 
   return (
-      <div className="w-full flex items-center justify-center px-4">      
+    <div className="w-full flex items-center justify-center px-4 max-h-screen overflow-y-auto">
+
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-2xl bg-[#181824]/90 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 text-white animate-[fadeIn_.3s_ease]"
       >
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-semibold tracking-tight">
@@ -55,12 +60,28 @@ export default function CreatePoll() {
           <label className="block text-sm text-gray-300 mb-2">
             Poll Question
           </label>
+
           <input
             type="text"
             placeholder="Which technology will dominate the next decade?"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             className="w-full bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:scale-[1.01] transition"
+          />
+        </div>
+
+        {/* Description (optional) */}
+        <div className="mb-6">
+          <label className="block text-sm text-gray-300 mb-2">
+            Description <span className="text-gray-500">(optional)</span>
+          </label>
+
+          <textarea
+            placeholder="Add more context to your poll..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+            className="w-full bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:scale-[1.01] transition"
           />
         </div>
 
@@ -72,10 +93,8 @@ export default function CreatePoll() {
 
           <div className="space-y-3">
             {options.map((opt, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2"
-              >
+              <div key={i} className="flex items-center gap-2">
+
                 <input
                   type="text"
                   placeholder={`Option ${i + 1}`}
@@ -93,6 +112,7 @@ export default function CreatePoll() {
                 >
                   ✕
                 </button>
+
               </div>
             ))}
           </div>
@@ -112,6 +132,7 @@ export default function CreatePoll() {
         >
           Create Poll
         </button>
+
       </form>
     </div>
   );

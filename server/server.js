@@ -46,10 +46,52 @@ app.get("/polls", async (req, res) => {
     res.send(results.rows);
 })
 
-app.post("/polls", async (req, res) => {
+app.post("/polls", authenticateToken, async (req, res) => {
+
     const pollTitle = req.body.title;
     const pollDesc = req.body.desc || null;
     const pollOptions = req.body.options;
+    const createdBy = req.user;
+    
+    if(!pollTitle || !Array.isArray(pollOptions) || pollOptions.length < 2){ //plus some other essential validation checks
+        return res.status(400).json({"message": "Invalid form submission"});
+    }
+    else{
+        try{
+            await db.query("BEGIN")
+            const pollResult = await db.query(`INSERT INTO 
+                polls(title, description, created_by, expires_at) 
+                VALUES($1, $2, $3, NOW() + INTERVAL '7 days')
+                RETURNING id, title, description, expires_at`, [pollTitle, pollDesc, createdBy]);
+
+            const insertedOptions = [];    
+            
+            for(const option of pollOptions){
+                    const optionResult = await db.query(`INSERT INTO 
+                    options(poll_id, text)
+                    VALUES($1, $2) RETURNING id, text`, [pollResult.rows[0].id, option.trim()]);
+
+                    insertedOptions.push(optionResult.rows[0])
+            }    
+
+            await db.query("COMMIT");
+
+            const poll = {
+                ...pollResult.rows[0],
+                options : insertedOptions
+            };
+
+            return res.status(201).json({poll});
+
+        }catch(err){ //insert failure
+            await db.query("ROLLBACK")
+            console.log(err)
+            return res.status(500).json({"message": "Server error"})
+        }
+
+    }
+
+
 })
 
 app.post("/votes", authenticateToken, async (req, res) => {

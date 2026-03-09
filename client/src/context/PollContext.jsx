@@ -1,53 +1,85 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import api from "../api";
 
 const PollContext = createContext();
 
-const defaultPolls = [
-  {
-    id: 1,
-    question: "Which stack do you prefer?",
-    image: "/assets/defaultPoll.jpg",
-    options: [
-      { id: 1, text: "MERN", votes: 4 },
-      { id: 2, text: "PERN", votes: 2 },
-    ],
-  },
-];
-
 export function PollProvider({ children }) {
+
   const [polls, setPolls] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
-  /* Load from localStorage */
-  useEffect(() => {
-    const stored = localStorage.getItem("pollit_polls");
-    if (stored) {
-      setPolls(JSON.parse(stored));
-    } else {
-      setPolls(defaultPolls);
+  /* =========================
+     Fetch Polls (pagination)
+  ========================== */
+
+  const fetchPolls = async (pageNum = 1) => {
+    try {
+      setLoading(true);
+
+      const res = await api.get(`/polls?page=${pageNum}`);
+
+      const newPolls = res.data.polls || [];
+
+      if (pageNum === 1) {
+        setPolls(newPolls);
+      } else {
+        setPolls(prev => [...prev, ...newPolls]);
+      }
+
+      if (newPolls.length === 0) {
+        setHasMore(false);
+      }
+
+      setPage(pageNum);
+
+    } catch (err) {
+      console.error("Failed to fetch polls", err);
+    } finally {
+      setLoading(false);
     }
-  }, []);
-
-  /* Persist */
-  useEffect(() => {
-    localStorage.setItem("pollit_polls", JSON.stringify(polls));
-  }, [polls]);
-
-  const createPoll = (question, options, image) => {
-    const newPoll = {
-      id: Date.now(),
-      question,
-      image: image || "/assets/defaultPoll.jpg",
-      options: options.map((text, i) => ({
-        id: i + 1,
-        text,
-        votes: 0,
-      })),
-    };
-
-    setPolls(prev => [newPoll, ...prev]);
   };
 
-  const votePoll = (pollId, optionId) => {
+  /* Initial load */
+
+  useEffect(() => {
+    fetchPolls(1);
+  }, []);
+
+  /* =========================
+     Create Poll
+  ========================== */
+
+  const createPoll = async (title, options, desc) => {
+    try {
+
+      const res = await api.post("/polls", {
+        title,
+        desc,
+        options 
+      });
+
+      const newPoll = res.data.poll;
+
+      // optimistic update
+      setPolls(prev => [newPoll, ...prev]);
+
+      return newPoll;
+
+    } catch (err) {
+      console.error("Poll creation failed", err);
+      throw err;
+    }
+  };
+
+  /* =========================
+     Vote Poll (optimistic)
+  ========================== */
+
+  const votePoll = async (pollId, optionId) => {
+
+    // optimistic UI update
     setPolls(prev =>
       prev.map(poll => {
         if (poll.id !== pollId) return poll;
@@ -56,25 +88,60 @@ export function PollProvider({ children }) {
           ...poll,
           options: poll.options.map(opt =>
             opt.id === optionId
-              ? { ...opt, votes: opt.votes + 1 }
+              ? { ...opt, votes: (opt.votes || 0) + 1 }
               : opt
-          ),
+          )
         };
       })
     );
+
+    try {
+      await api.post("/votes", {
+        pollId,
+        optionId
+      });
+    } catch (err) {
+      console.error("Vote failed", err);
+    }
   };
 
-  const getPollById = (id) => {
-    return polls.find(p => String(p.id) === String(id));
+  /* =========================
+     Get Poll by ID (cache first)
+  ========================== */
+
+  const getPollById = async (id) => {
+
+    const existing = polls.find(p => String(p.id) === String(id));
+
+    if (existing) return existing;
+
+    try {
+      const res = await api.get(`/polls/${id}`);
+      return res.data.poll;
+    } catch (err) {
+      console.error("Failed to fetch poll", err);
+      return null;
+    }
   };
 
   return (
-    <PollContext.Provider value={{ polls, createPoll, votePoll, getPollById }}>
+    <PollContext.Provider
+      value={{
+        polls,
+        loading,
+        page,
+        hasMore,
+        fetchPolls,
+        createPoll,
+        votePoll,
+        getPollById
+      }}
+    >
       {children}
     </PollContext.Provider>
   );
 }
 
-export function usePolls() {
+export function usePoll() {
   return useContext(PollContext);
 }
