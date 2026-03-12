@@ -6,6 +6,7 @@ export default function CreatePoll() {
 
   const [question, setQuestion] = useState("");
   const [description, setDescription] = useState("");
+  const [image, setImage] = useState("");
   const [options, setOptions] = useState(["", ""]);
 
   const handleOptionChange = (index, value) => {
@@ -34,7 +35,24 @@ export default function CreatePoll() {
       return;
     }
 
-    await createPoll(question, cleanOptions, description || null);
+    try {
+
+      await createPoll(
+        question,
+        cleanOptions,
+        description || null,
+        image || null
+      );
+
+      // Reset form
+      setQuestion("");
+      setDescription("");
+      setImage("");
+      setOptions(["", ""]);
+
+    } catch (err) {
+      alert("Failed to create poll.");
+    }
   };
 
   return (
@@ -70,7 +88,7 @@ export default function CreatePoll() {
           />
         </div>
 
-        {/* Description (optional) */}
+        {/* Description */}
         <div className="mb-6">
           <label className="block text-sm text-gray-300 mb-2">
             Description <span className="text-gray-500">(optional)</span>
@@ -82,6 +100,21 @@ export default function CreatePoll() {
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             className="w-full bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:scale-[1.01] transition"
+          />
+        </div>
+
+        {/* Image URL */}
+        <div className="mb-6">
+          <label className="block text-sm text-gray-300 mb-2">
+            Image URL <span className="text-gray-500">(optional)</span>
+          </label>
+
+          <input
+            type="text"
+            placeholder="https://example.com/image.jpg"
+            value={image}
+            onChange={(e) => setImage(e.target.value)}
+            className="w-full bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:scale-[1.01] transition"
           />
         </div>
 

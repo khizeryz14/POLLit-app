@@ -51,13 +51,14 @@ export function PollProvider({ children }) {
      Create Poll
   ========================== */
 
-  const createPoll = async (title, options, desc) => {
+  const createPoll = async (title, options, desc, image) => {
     try {
 
       const res = await api.post("/polls", {
         title,
         desc,
-        options 
+        options,
+        image
       });
 
       const newPoll = res.data.poll;

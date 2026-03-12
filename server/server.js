@@ -40,10 +40,81 @@ app.listen(PORT, () => {
     console.log(`Listening on ${PORT}`)
 })
 
+function calculateTimeLeft(expiresAt){
+
+}
+
 app.get("/polls", async (req, res) => {
-    const results = await db.query("SELECT * from users");
-    console.log("fetched")
-    res.send(results.rows);
+    try{
+        const page = parseInt(req.query.page) || 1;
+
+        if(page < 1){
+            return res.status(400).json({"message": "Invalid page number"})
+        }
+
+        const PAGE_SIZE = 10;
+
+        const limit = PAGE_SIZE;
+        const offset = (page - 1) * PAGE_SIZE;
+
+        const sort = req.query.sort || "new";
+
+        let orderBy;
+
+        switch (sort) {
+            case "trending":
+                orderBy = "total_votes DESC";
+                break;
+
+            case "ending":
+                orderBy = "p.expires_at ASC";
+                break;
+
+            case "user":
+                orderBy = "u.username ASC";
+                break;
+
+            default:
+                orderBy = "p.created_at DESC"; // newest
+        }
+
+        //[QUERY]
+
+        const query = `SELECT p.id, 
+        p.title, 
+        p.description, 
+        p.image_link, 
+        p.expires_at, 
+        u.username, 
+        COUNT(v.id) AS total_votes
+
+        FROM polls p 
+
+        JOIN users u ON p.created_by = u.id
+
+        LEFT JOIN options o ON o.poll_id = p.id
+
+        LEFT JOIN votes v ON v.option_id = o.id
+
+        GROUP BY p.id, u.username
+
+        ORDER BY ${orderBy}
+        
+        LIMIT $1
+        OFFSET $2`
+
+        const results = await db.query(query, [limit, offset]);
+
+        return res.status(200).json({
+            polls: results.rows,
+            page,
+            hasMore: results.rows.length === PAGE_SIZE
+        });
+    }
+    catch(err){
+        console.error(err)
+        res.status(500).json({"message": "Failed to fetch polls"});
+    }
 })
 
 app.post("/polls", authenticateToken, async (req, res) => {
@@ -52,6 +123,7 @@ app.post("/polls", authenticateToken, async (req, res) => {
     const pollDesc = req.body.desc || null;
     const pollOptions = req.body.options;
     const createdBy = req.user;
+    const imageLink = req.body.image || null;
     
     if(!pollTitle || !Array.isArray(pollOptions) || pollOptions.length < 2){ //plus some other essential validation checks
         return res.status(400).json({"message": "Invalid form submission"});
@@ -60,9 +132,9 @@ app.post("/polls", authenticateToken, async (req, res) => {
         try{
             await db.query("BEGIN")
             const pollResult = await db.query(`INSERT INTO 
-                polls(title, description, created_by, expires_at) 
-                VALUES($1, $2, $3, NOW() + INTERVAL '7 days')
-                RETURNING id, title, description, expires_at`, [pollTitle, pollDesc, createdBy]);
+                polls(title, description, created_by, image_link, expires_at) 
+                VALUES($1, $2, $3, $4, NOW() + INTERVAL '7 days')
+                RETURNING id, title, description, expires_at`, [pollTitle, pollDesc, createdBy, imageLink]);
 
             const insertedOptions = [];    
             
