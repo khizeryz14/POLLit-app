@@ -41,7 +41,22 @@ app.listen(PORT, () => {
 })
 
 function calculateTimeLeft(expiresAt){
+    const now = new Date();
+    const difference = new Date(expiresAt) - now;
 
+    if(difference<=0){
+        return "Ended";
+    }
+
+    const hours = Math.floor(difference / (1000*60*60));
+
+    if(hours < 24){
+        return `${hours}h left`;
+    }
+
+    const days = Math.floor(hours/24);
+
+    return `${days}d left`;
 }
 
 app.get("/polls", async (req, res) => {
@@ -80,35 +95,63 @@ app.get("/polls", async (req, res) => {
 
         //[QUERY]
 
-        const query = `SELECT p.id, 
-        p.title, 
-        p.description, 
-        p.image_link, 
-        p.expires_at, 
-        u.username, 
-        COUNT(v.id) AS total_votes
+        const query = `SELECT
+                        p.id,
+                        p.title,
+                        p.description,
+                        p.image_link,
+                        p.expires_at,
+                        u.username,
 
-        FROM polls p 
+                        COUNT(v.id) AS total_votes,
 
-        JOIN users u ON p.created_by = u.id
+                        JSON_AGG(
+                            JSON_BUILD_OBJECT(
+                                'id', o.id,
+                                'text', o.text,
+                                'votes', o.vote_count
+                            )
+                        ) AS options
 
-        LEFT JOIN options o ON o.poll_id = p.id
+                    FROM polls p
 
-        LEFT JOIN votes v ON v.option_id = o.id
+                    JOIN users u
+                    ON p.created_by = u.id
 
-        GROUP BY p.id, u.username
+                    LEFT JOIN (
+                        SELECT
+                            o.id,
+                            o.poll_id,
+                            o.text,
+                            COUNT(v.id) AS vote_count
+                        FROM options o
+                        LEFT JOIN votes v
+                        ON v.option_id = o.id
+                        GROUP BY o.id
+                    ) o
+                    ON o.poll_id = p.id
 
-        ORDER BY ${orderBy}
-        
-        LIMIT $1
-        OFFSET $2`
+                    LEFT JOIN votes v
+                    ON v.option_id = o.id
+
+                    GROUP BY p.id, u.username
+
+                    ORDER BY ${orderBy}
+
+                    LIMIT $1
+                    OFFSET $2`;
 
         const results = await db.query(query, [limit, offset]);
 
+        const polls = results.rows.map(p => ({
+            ...p,
+            timeLeft: calculateTimeLeft(p.expires_at)
+        }))
+
         return res.status(200).json({
-            polls: results.rows,
+            polls,
             page,
-            hasMore: results.rows.length === PAGE_SIZE
+            hasMore: polls.length === PAGE_SIZE
         });
     }
     catch(err){

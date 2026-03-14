@@ -1,20 +1,25 @@
 import React from "react";
 import { FiBarChart2, FiClock } from "react-icons/fi";
+import { Link } from "react-router-dom";
 import defaultImage from "../assets/defaultPoll.jpg";
 
 const PollCard = ({
+  pollId,
   title,
   description,
-  options,
-  totalVotes,
-  timeLeft,
+  options = [],
+  totalVotes = 0,
+  timeLeft = "",
   image,
-  onVote,          // optional
+  onVote
 }) => {
+
   const pollImage = image || defaultImage;
+  const safeOptions = Array.isArray(options) ? options : [];
 
   return (
-    <div className="
+    <div
+      className="
       group
       bg-slate-900/60
       backdrop-blur-md
@@ -25,62 +30,75 @@ const PollCard = ({
       hover:-translate-y-1
       hover:border-indigo-500/40
       hover:shadow-lg hover:shadow-indigo-600/10
-    ">
-      {/* Image */}
-      <div className="h-40 w-full overflow-hidden">
-        <img
-          src={pollImage}
-          alt="Poll"
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-        />
-      </div>
+    "
+    >
 
-      <div className="p-5">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-3">
-          <h3 className="text-lg font-medium tracking-tight group-hover:text-indigo-400 transition-colors">
-            {title}
-          </h3>
+      {/* Clickable Area */}
+      <Link to={`/poll/${pollId}`}>
 
-          <FiBarChart2 className="text-slate-500 group-hover:text-indigo-400 transition-colors" />
+        {/* Image */}
+        <div className="h-40 w-full overflow-hidden">
+          <img
+            src={pollImage}
+            alt="Poll"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
         </div>
 
-        <p className="text-sm text-slate-400 mb-4 line-clamp-2">
-          {description}
-        </p>
+        <div className="p-5">
 
-        {/* Options + Voting */}
-        <div className="space-y-2 mb-4">
-          {options?.slice(0, 2).map((opt, i) => (
-            <button
-              key={i}
-              onClick={() => onVote && onVote(opt)}
-              className={`
-                w-full text-left text-sm
-                bg-slate-800/70
-                hover:bg-indigo-600/20
-                border border-transparent hover:border-indigo-500/30
-                rounded-lg px-3 py-2
-                text-slate-300
-                transition-transform duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-95 hover:scale-[1.02]
-                ${onVote ? "cursor-pointer" : "cursor-default"}
-              `}
-            >
-              {opt}
-            </button>
-          ))}
-        </div>
+          {/* Header */}
+          <div className="flex items-start justify-between mb-3">
+            <h3 className="text-lg font-medium tracking-tight group-hover:text-indigo-400 transition-colors">
+              {title}
+            </h3>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between text-xs text-slate-500">
-          <span>{totalVotes} votes</span>
-
-          <div className="flex items-center gap-1">
-            <FiClock />
-            <span>{timeLeft}</span>
+            <FiBarChart2 className="text-slate-500 group-hover:text-indigo-400 transition-colors" />
           </div>
+
+          <p className="text-sm text-slate-400 mb-4 line-clamp-2">
+            {description || "No description provided"}
+          </p>
+
+        </div>
+      </Link>
+
+      {/* Options + Voting */}
+      <div className="px-5 pb-4 space-y-2">
+        {safeOptions.slice(0, 2).map((opt) => (
+          <button
+            key={opt.id}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onVote && onVote(pollId, opt.id);
+            }}
+            className={`
+              w-full text-left text-sm
+              bg-slate-800/70
+              hover:bg-indigo-600/20
+              border border-transparent hover:border-indigo-500/30
+              rounded-lg px-3 py-2
+              text-slate-300
+              transition-transform duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-95 hover:scale-[1.02]
+              ${onVote ? "cursor-pointer" : "cursor-default"}
+            `}
+          >
+            {opt.text}
+          </button>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div className="px-5 pb-5 flex items-center justify-between text-xs text-slate-500">
+        <span>{totalVotes} votes</span>
+
+        <div className="flex items-center gap-1">
+          <FiClock />
+          <span>{timeLeft || "Active"}</span>
         </div>
       </div>
+
     </div>
   );
 };

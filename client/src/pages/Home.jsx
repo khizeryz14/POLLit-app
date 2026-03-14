@@ -1,39 +1,23 @@
 import React from "react";
 import PollGrid from "../components/PollGrid";
-const mockPolls = [
-  {
-    id: 1,
-    title: "Best Programming Language?",
-    description: "Vote for the language you enjoy working with the most.",
-    options: ["JavaScript", "Python", "Rust"],
-    totalVotes: 128,
-    timeLeft: "2h left",
-    image: "https://images.unsplash.com/photo-1518770660439-4636190af475",
-  },
-  {
-    id: 2,
-    title: "Cats vs Dogs?",
-    description: "An eternal internet debate.",
-    options: ["Cats", "Dogs"],
-    totalVotes: 542,
-    timeLeft: "Ends today",
-    // No image → default fallback used
-  },
-  {
-    id: 3,
-    title: "Preferred Database?",
-    description: "Which database do you prefer for modern apps?",
-    options: ["PostgreSQL", "MongoDB"],
-    totalVotes: 214,
-    timeLeft: "5h left",
-    image: "https://images.unsplash.com/photo-1555949963-aa79dcee981c",
-  },
-];
+import { usePoll } from "../context/PollContext"
+
 
 const Home = () => {
-  const handleVote = (option) => {
-    alert(`You voted for ${option}`);
-  };
+
+  const {polls, loading, votePoll} = usePoll();
+
+  const handleVote = (pollId, optionId) => {
+    votePoll(pollId, optionId);
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <p className="text-gray-400">Loading polls...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-6 animate-[fadeIn_.3s_ease]">
@@ -41,7 +25,7 @@ const Home = () => {
         Trending Polls
       </h1>
 
-      <PollGrid polls={mockPolls} onVote={handleVote} />
+      <PollGrid polls={polls} onVote={handleVote} />
     </div>
   );
 };
