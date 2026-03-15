@@ -135,17 +135,26 @@ export function PollProvider({ children }) {
 
     const existing = polls.find(p => String(p.id) === String(id));
 
-    if (existing) return existing;
-
     try {
 
       const res = await api.get(`/polls/${id}`);
+      const freshPoll = normalizePoll(res.data.poll);
 
-      return normalizePoll(res.data.poll);
+      // update cache
+      setPolls(prev => {
+        const others = prev.filter(p => String(p.id) !== String(id));
+        return [freshPoll, ...others];
+      });
+
+      return freshPoll;
 
     } catch (err) {
+
       console.error("Failed to fetch poll", err);
-      return null;
+
+      // fallback to cached poll if API fails
+      return existing || null;
+
     }
   };
 

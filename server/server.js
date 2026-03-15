@@ -160,6 +160,76 @@ app.get("/polls", async (req, res) => {
     }
 })
 
+app.get("/polls/:pollId", async (req, res) => {
+    
+  try {
+    const pollId = req.params.pollId;
+
+    const query = `
+      SELECT
+        p.id,
+        p.title,
+        p.description,
+        p.image_link,
+        p.expires_at,
+        u.username,
+
+        COALESCE(SUM(o.vote_count), 0) AS total_votes,
+
+
+          JSON_AGG(
+            JSON_BUILD_OBJECT(
+              'id', o.id,
+              'text', o.text,
+              'votes', o.vote_count
+            ) 
+            ORDER by o.id
+        ) AS options
+
+      FROM polls p
+
+      JOIN users u
+        ON p.created_by = u.id
+
+      LEFT JOIN (
+        SELECT
+          o.id,
+          o.poll_id,
+          o.text,
+          COUNT(v.id) AS vote_count
+        FROM options o
+        LEFT JOIN votes v
+          ON v.option_id = o.id
+        GROUP BY o.id
+      ) o
+        ON o.poll_id = p.id
+
+      WHERE p.id = $1
+
+      GROUP BY p.id, u.username
+    `;
+
+    const response = await db.query(query, [pollId]);
+
+    if (response.rows.length === 0) {
+      return res.status(404).json({ message: "Poll not found" });
+    }
+
+    const poll = {
+      ...response.rows[0],
+      timeLeft: calculateTimeLeft(response.rows[0].expires_at)
+    };
+
+    res.status(200).json({ poll });
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.status(500).json({ "message": "Server error" });
+  }
+});
+
 app.post("/polls", authenticateToken, async (req, res) => {
 
     const pollTitle = req.body.title;

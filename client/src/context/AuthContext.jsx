@@ -22,15 +22,6 @@ export function AuthProvider({ children }) {
 
   }, []);
 
-  /* Persist user */
-  // useEffect(() => {
-  //   if (user) {
-  //     localStorage.setItem("pollit_user", JSON.stringify(user));
-  //   } else {
-  //     localStorage.removeItem("pollit_user");
-  //   }
-  // }, [user]);
-
   /* LOGIN */
   const login = async (email, password) => {
     const { data } = await api.post("/auth/login", {

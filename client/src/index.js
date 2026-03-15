@@ -20,7 +20,7 @@ const router = createBrowserRouter([
             element: <Home/>
         },
         {
-            path: "poll/:pollID",
+            path: "polls/:pollId",
             element: <PollView/>
         },
         {

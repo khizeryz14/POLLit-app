@@ -1,5 +1,5 @@
 import React from "react";
-import { FiBarChart2, FiClock } from "react-icons/fi";
+import { FiBarChart2, FiClock, FiArrowRight } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import defaultImage from "../assets/defaultPoll.jpg";
 
@@ -16,6 +16,7 @@ const PollCard = ({
 
   const pollImage = image || defaultImage;
   const safeOptions = Array.isArray(options) ? options : [];
+  const hiddenOptions = safeOptions.length - 2;
 
   return (
     <div
@@ -34,7 +35,7 @@ const PollCard = ({
     >
 
       {/* Clickable Area */}
-      <Link to={`/poll/${pollId}`}>
+      <Link to={`/polls/${pollId}`}>
 
         {/* Image */}
         <div className="h-40 w-full overflow-hidden">
@@ -65,6 +66,7 @@ const PollCard = ({
 
       {/* Options + Voting */}
       <div className="px-5 pb-4 space-y-2">
+
         {safeOptions.slice(0, 2).map((opt) => (
           <button
             key={opt.id}
@@ -73,20 +75,38 @@ const PollCard = ({
               e.stopPropagation();
               onVote && onVote(pollId, opt.id);
             }}
-            className={`
+            className="
               w-full text-left text-sm
               bg-slate-800/70
               hover:bg-indigo-600/20
               border border-transparent hover:border-indigo-500/30
               rounded-lg px-3 py-2
               text-slate-300
-              transition-transform duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-95 hover:scale-[1.02]
-              ${onVote ? "cursor-pointer" : "cursor-default"}
-            `}
+              transition-transform duration-150 ease-[cubic-bezier(0.4,0,0.2,1)]
+              active:scale-95 hover:scale-[1.02]
+            "
           >
             {opt.text}
           </button>
         ))}
+
+        {/* Indicator for additional options */}
+        {hiddenOptions > 0 && (
+          <Link
+            to={`/poll/${pollId}`}
+            className="
+              flex items-center gap-1
+              text-xs text-indigo-400
+              hover:text-indigo-300
+              pl-1 pt-1
+              transition-colors
+            "
+          >
+            +{hiddenOptions} more option{hiddenOptions > 1 ? "s" : ""}
+            <FiArrowRight size={14} />
+          </Link>
+        )}
+
       </div>
 
       {/* Footer */}
