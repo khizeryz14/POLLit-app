@@ -111,6 +111,7 @@ app.get("/polls", async (req, res) => {
                                 'text', o.text,
                                 'votes', o.vote_count
                             )
+                            ORDER by o.id
                         ) AS options
 
                     FROM polls p
@@ -270,7 +271,7 @@ app.post("/polls", authenticateToken, async (req, res) => {
 
         }catch(err){ //insert failure
             await db.query("ROLLBACK")
-            console.log(err)
+            console.error(err)
             return res.status(500).json({"message": "Server error"})
         }
 
@@ -280,7 +281,46 @@ app.post("/polls", authenticateToken, async (req, res) => {
 })
 
 app.post("/votes", authenticateToken, async (req, res) => {
+    const pollId = req.body.pollId;
+    const user = req.user; //authenticateToken attaches userId as 'user' on the request
+    const optionId = req.body.optionId;
+    
+    if(!pollId || !optionId){
+        return res.status(400).json({"message":"Invalid option or poll selected"});
+    }
+    
+    try{
+        await db.query("BEGIN")
+        const existingVote = await db.query("SELECT COUNT(*)::int AS entries from votes WHERE poll_id = $1 AND user_id = $2", [pollId, user]);
 
+        if (existingVote.rows[0].entries > 0 ){
+            await db.query("ROLLBACK")
+            return res.status(400).json({"message": "Already voted on this poll"});
+        }
+
+        const optionCheck = await db.query("SELECT id FROM options WHERE poll_id = $1 AND id = $2",[pollId, optionId]);
+
+        if(optionCheck.rows.length === 0){
+            await db.query("ROLLBACK");
+            return res.status(400).json({"message": "Invalid option for this poll"});
+        }
+
+        const voteResult = await db.query("INSERT INTO votes(poll_id, option_id, user_id) VALUES ($1, $2, $3) RETURNING id",[pollId, optionId, user]);
+        await db.query("COMMIT");
+
+        const vote = {"id": voteResult.rows[0].id,
+                      "poll": pollId,
+                      "option": optionId,  
+        };
+
+        res.status(201).json({vote});
+        
+    }
+    catch(err){
+        await db.query("ROLLBACK");
+        console.error(err);
+        return res.status(500).json({"message": "Server error"});
+    }
 })
 
 app.post("/auth/login", async (req, res) => {
