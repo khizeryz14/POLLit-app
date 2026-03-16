@@ -23,7 +23,8 @@ export function PollProvider({ children }) {
     options: p.options || [],
     timeLeft: p.timeLeft,
     expiresAt: p.expires_at,
-    username: p.username
+    username: p.username,
+    hasVoted: p.has_voted ?? false
   });
 
   /* =========================
@@ -97,34 +98,51 @@ export function PollProvider({ children }) {
 
   const votePoll = async (pollId, optionId) => {
 
-    setPolls(prev =>
-      prev.map(poll => {
-
-        if (poll.id !== pollId) return poll;
-
-        return {
-          ...poll,
-          totalVotes: poll.totalVotes + 1,
-          options: poll.options.map(opt =>
-            opt.id === optionId
-              ? { ...opt, votes: (opt.votes || 0) + 1 }
-              : opt
-          )
-        };
-
-      })
-    );
-
     try {
 
-      await api.post("/votes", {
+      const res = await api.post("/votes", {
         pollId,
         optionId
       });
 
+      const updated = res.data.poll;
+
+      setPolls(prev =>
+        prev.map(poll => {
+
+          if (poll.id !== pollId) return poll;
+
+          return {
+            ...poll,
+            totalVotes: updated.totalVotes,
+            options: poll.options.map(opt => {
+
+              const serverOpt = updated.options.find(o => o.id === opt.id);
+
+              return serverOpt
+                ? { ...opt, votes: serverOpt.votes }
+                : opt;
+
+            })
+          };
+
+        })
+      );
+
+      return { success: true };
+
     } catch (err) {
+
+      if (err.response?.status === 400) {
+        // already voted → normal UX state
+        return { success: false, alreadyVoted: true };
+      }
+
       console.error("Vote failed", err);
+      return { success: false };
+
     }
+
   };
 
   /* =========================

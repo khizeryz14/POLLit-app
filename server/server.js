@@ -306,14 +306,35 @@ app.post("/votes", authenticateToken, async (req, res) => {
         }
 
         const voteResult = await db.query("INSERT INTO votes(poll_id, option_id, user_id) VALUES ($1, $2, $3) RETURNING id",[pollId, optionId, user]);
+        
+        const results = await db.query(`
+            SELECT
+            o.id,
+            COUNT(v.id)::int AS votes
+            FROM options o
+            LEFT JOIN votes v
+            ON v.option_id = o.id
+            WHERE o.poll_id = $1
+            GROUP BY o.id
+            `, [pollId]);
+            
+            const totalVotes = await db.query(
+                "SELECT COUNT(*)::int AS total FROM votes WHERE poll_id = $1",
+                [pollId]
+            );
+            
         await db.query("COMMIT");
-
-        const vote = {"id": voteResult.rows[0].id,
-                      "poll": pollId,
-                      "option": optionId,  
-        };
-
-        res.status(201).json({vote});
+        
+        res.status(201).json({
+            vote: { id: voteResult.rows[0].id,
+                    pollId,
+                    optionId,  
+        },
+            poll: {
+                totalVotes: totalVotes.rows[0].total,
+                options: results.rows
+            }
+        });
         
     }
     catch(err){

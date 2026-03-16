@@ -12,6 +12,9 @@ const PollView = () => {
   const [poll, setPoll] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const [hasVoted, setHasVoted] = useState(false);
+  const [selectedOption, setSelectedOption] = useState(null);
+
   useEffect(() => {
 
     const loadPoll = async () => {
@@ -28,6 +31,17 @@ const PollView = () => {
     loadPoll();
 
   }, [pollId]);
+
+  const handleVote = async (optionId) => {
+
+    if (hasVoted) return;
+
+    setSelectedOption(optionId);
+    setHasVoted(true);
+
+    await votePoll(poll.id, optionId);
+
+  };
 
   if (loading) {
     return (
@@ -46,6 +60,13 @@ const PollView = () => {
   }
 
   const pollImage = poll.image || defaultImage;
+
+  const totalVotes = poll.totalVotes || 0;
+
+  const getPercent = (votes) => {
+    if (totalVotes === 0) return 0;
+    return Math.round((votes / totalVotes) * 100);
+  };
 
   return (
     <div className="max-w-3xl mx-auto p-6">
@@ -72,25 +93,56 @@ const PollView = () => {
       {/* Options */}
       <div className="space-y-3 mb-6">
 
-        {poll.options.map(option => (
+        {poll.options.map(option => {
 
-          <button
-            key={option.id}
-            onClick={() => votePoll(poll.id, option.id)}
-            className="
-              w-full text-left
-              bg-slate-800/70
-              hover:bg-indigo-600/20
-              border border-slate-700
-              rounded-lg px-4 py-3
-              text-slate-300
-              transition
-            "
-          >
-            {option.text}
-          </button>
+          const percent = getPercent(option.votes);
 
-        ))}
+          return (
+            <button
+              key={option.id}
+              onClick={() => handleVote(option.id)}
+              disabled={hasVoted}
+              className={`
+                relative w-full text-left
+                bg-slate-800/70
+                border border-slate-700
+                rounded-lg px-4 py-3
+                text-slate-300
+                overflow-hidden
+                transition
+                ${selectedOption === option.id ? "ring-2 ring-indigo-500" : ""}
+              `}
+            >
+
+              {/* Animated Result Fill */}
+              {hasVoted && (
+                <div
+                  className="
+                    absolute inset-y-0 left-0
+                    bg-indigo-600/30
+                    transition-all duration-700 ease-out
+                  "
+                  style={{ width: `${percent}%` }}
+                />
+              )}
+
+              {/* Content */}
+              <div className="relative flex items-center justify-between">
+
+                <span>{option.text}</span>
+
+                {hasVoted && (
+                  <span className="text-sm text-slate-300">
+                    {percent}%
+                  </span>
+                )}
+
+              </div>
+
+            </button>
+          );
+
+        })}
 
       </div>
 
