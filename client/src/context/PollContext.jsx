@@ -114,16 +114,9 @@ export function PollProvider({ children }) {
 
           return {
             ...poll,
+            hasVoted: true,
             totalVotes: updated.totalVotes,
-            options: poll.options.map(opt => {
-
-              const serverOpt = updated.options.find(o => o.id === opt.id);
-
-              return serverOpt
-                ? { ...opt, votes: serverOpt.votes }
-                : opt;
-
-            })
+            options: updated.options 
           };
 
         })
@@ -159,10 +152,11 @@ export function PollProvider({ children }) {
       const freshPoll = normalizePoll(res.data.poll);
 
       // update cache
-      setPolls(prev => {
-        const others = prev.filter(p => String(p.id) !== String(id));
-        return [freshPoll, ...others];
-      });
+      setPolls(prev =>
+        prev.map(p =>
+          String(p.id) === String(id) ? freshPoll : p
+        )
+      );
 
       return freshPoll;
 

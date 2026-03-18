@@ -1,5 +1,5 @@
-import React from "react";
-import { FiBarChart2, FiClock, FiArrowRight } from "react-icons/fi";
+import React, { useEffect, useState } from "react";
+import { FiBarChart2, FiClock, FiArrowRight, FiCheck } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import defaultImage from "../assets/defaultPoll.jpg";
 
@@ -11,27 +11,64 @@ const PollCard = ({
   totalVotes = 0,
   timeLeft = "",
   image,
+  hasVoted = false,
   onVote
 }) => {
 
   const pollImage = image || defaultImage;
   const safeOptions = Array.isArray(options) ? options : [];
-  const hiddenOptions = safeOptions.length - 2;
+
+  const [selected, setSelected] = useState(null);
+  const [animateBars, setAnimateBars] = useState(false);
+  const [isVoting, setIsVoting] = useState(false);
+
+  const total = totalVotes || 0;
+
+  const getPercent = (votes) => {
+    if (!total) return 0;
+    return Math.round((votes / total) * 100);
+  };
+
+  /* Animate bars when already voted */
+  useEffect(() => {
+    if (hasVoted) {
+      setAnimateBars(false);
+      setTimeout(() => setAnimateBars(true), 50);
+    }
+  }, [hasVoted]);
+
+  /* Handle Vote (no optimistic snap) */
+  const handleVote = async (e, optionId) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (hasVoted || isVoting) return;
+
+    setIsVoting(true);
+
+    const res = await onVote?.(pollId, optionId);
+
+    if (res?.success || res?.alreadyVoted) {
+      setSelected(optionId);
+    }
+
+    setIsVoting(false);
+  };
 
   return (
     <div
       className="
-      group
-      bg-slate-900/60
-      backdrop-blur-md
-      border border-slate-800
-      rounded-2xl
-      overflow-hidden
-      transition-all duration-300
-      hover:-translate-y-1
-      hover:border-indigo-500/40
-      hover:shadow-lg hover:shadow-indigo-600/10
-    "
+        group
+        bg-slate-900/60
+        backdrop-blur-md
+        border border-slate-800
+        rounded-2xl
+        overflow-hidden
+        transition-all duration-300
+        hover:-translate-y-1
+        hover:border-indigo-500/40
+        hover:shadow-lg hover:shadow-indigo-600/10
+      "
     >
 
       {/* Clickable Area */}
@@ -64,36 +101,83 @@ const PollCard = ({
         </div>
       </Link>
 
-      {/* Options + Voting */}
+      {/* OPTIONS */}
       <div className="px-5 pb-4 space-y-2">
 
-        {safeOptions.slice(0, 2).map((opt) => (
-          <button
-            key={opt.id}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onVote && onVote(pollId, opt.id);
-            }}
-            className="
-              w-full text-left text-sm
-              bg-slate-800/70
-              hover:bg-indigo-600/20
-              border border-transparent hover:border-indigo-500/30
-              rounded-lg px-3 py-2
-              text-slate-300
-              transition-transform duration-150 ease-[cubic-bezier(0.4,0,0.2,1)]
-              active:scale-95 hover:scale-[1.02]
-            "
-          >
-            {opt.text}
-          </button>
-        ))}
+        {safeOptions.slice(0, 2).map(opt => {
 
-        {/* Indicator for additional options */}
-        {hiddenOptions > 0 && (
+          const percent = getPercent(opt.votes);
+          const isSelected = selected === opt.id;
+
+          return hasVoted ? (
+            // RESULTS VIEW
+            <div
+              key={opt.id}
+              className="
+                relative w-full text-sm
+                bg-slate-800/70
+                border border-slate-700
+                rounded-lg px-3 py-2
+                text-slate-300
+                overflow-hidden
+              "
+            >
+
+              {/* BAR */}
+              <div
+                className="
+                  absolute inset-y-0 left-0
+                  bg-gradient-to-r from-indigo-500/50 to-indigo-400/30
+                  transition-all duration-700 ease-out
+                  rounded-lg
+                "
+                style={{
+                  width: animateBars ? `${percent}%` : "0%"
+                }}
+              />
+
+              {/* CONTENT */}
+              <div className="relative flex justify-between items-center">
+
+                <span className="flex items-center gap-2">
+                  {isSelected && <FiCheck className="text-emerald-400" />}
+                  {opt.text}
+                </span>
+
+                <span className="text-xs text-indigo-300">
+                  {percent}%
+                </span>
+
+              </div>
+
+            </div>
+
+          ) : (
+            // VOTING VIEW
+            <button
+              key={opt.id}
+              onClick={(e) => handleVote(e, opt.id)}
+              className="
+                w-full text-left text-sm
+                bg-slate-800/70
+                hover:bg-indigo-600/20
+                border border-transparent hover:border-indigo-500/30
+                rounded-lg px-3 py-2
+                text-slate-300
+                transition-transform duration-150
+                active:scale-95 hover:scale-[1.02]
+              "
+            >
+              {opt.text}
+            </button>
+          );
+
+        })}
+
+        {/* More options */}
+        {safeOptions.length > 2 && (
           <Link
-            to={`/poll/${pollId}`}
+            to={`/polls/${pollId}`}
             className="
               flex items-center gap-1
               text-xs text-indigo-400
@@ -102,7 +186,7 @@ const PollCard = ({
               transition-colors
             "
           >
-            +{hiddenOptions} more option{hiddenOptions > 1 ? "s" : ""}
+            +{safeOptions.length - 2} more options
             <FiArrowRight size={14} />
           </Link>
         )}

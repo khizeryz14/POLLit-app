@@ -19,6 +19,7 @@ const PollGrid = ({ polls, onVote }) => {
           timeLeft={poll.timeLeft}
           image={poll.image}
           onVote={onVote}
+          hasVoted={poll.hasVoted}
         />
       ))}
     </div>

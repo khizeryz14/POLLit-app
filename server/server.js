@@ -8,6 +8,7 @@ import cors from "cors";
 import jwt from "jsonwebtoken"
 import cookieParser from "cookie-parser";
 import authenticateToken from "./middleware/authMiddleware.js";
+import { optionalAuth } from "./middleware/optionalAuthMiddleware.js";
 
 const app = express();
 const PORT = process.env.PORT;
@@ -59,7 +60,7 @@ function calculateTimeLeft(expiresAt){
     return `${days}d left`;
 }
 
-app.get("/polls", async (req, res) => {
+app.get("/polls", optionalAuth, async (req, res) => {
     try{
         const page = parseInt(req.query.page) || 1;
 
@@ -103,46 +104,49 @@ app.get("/polls", async (req, res) => {
                         p.expires_at,
                         u.username,
 
-                        COUNT(v.id) AS total_votes,
+                        /* has_voted */
+                        EXISTS (
+                            SELECT 1
+                            FROM votes v2
+                            WHERE v2.poll_id = p.id
+                            AND v2.user_id = $1
+                        ) AS has_voted,
 
-                        JSON_AGG(
-                            JSON_BUILD_OBJECT(
+                        /* options array */
+                        COALESCE(
+                            json_agg(
+                            DISTINCT jsonb_build_object(
                                 'id', o.id,
                                 'text', o.text,
-                                'votes', o.vote_count
+                                'votes', COALESCE(v_counts.count, 0)
                             )
-                            ORDER by o.id
-                        ) AS options
+                            ) FILTER (WHERE o.id IS NOT NULL),
+                            '[]'
+                        ) AS options,
 
-                    FROM polls p
+                        /* total votes */
+                        COALESCE(SUM(v_counts.count), 0)::int AS total_votes
 
-                    JOIN users u
-                    ON p.created_by = u.id
+                        FROM polls p
 
-                    LEFT JOIN (
-                        SELECT
-                            o.id,
-                            o.poll_id,
-                            o.text,
-                            COUNT(v.id) AS vote_count
-                        FROM options o
-                        LEFT JOIN votes v
-                        ON v.option_id = o.id
-                        GROUP BY o.id
-                    ) o
-                    ON o.poll_id = p.id
+                        JOIN users u ON u.id = p.created_by
 
-                    LEFT JOIN votes v
-                    ON v.option_id = o.id
+                        LEFT JOIN options o ON o.poll_id = p.id
 
-                    GROUP BY p.id, u.username
+                        /* pre-count votes per option (IMPORTANT) */
+                        LEFT JOIN (
+                        SELECT option_id, COUNT(*)::int AS count
+                        FROM votes
+                        GROUP BY option_id
+                        ) v_counts ON v_counts.option_id = o.id
 
-                    ORDER BY ${orderBy}
+                        GROUP BY p.id, u.username
 
-                    LIMIT $1
-                    OFFSET $2`;
+                        ORDER BY p.created_at DESC
 
-        const results = await db.query(query, [limit, offset]);
+                        LIMIT $2 OFFSET $3;`;
+
+        const results = await db.query(query, [req.user, limit, offset]);
 
         const polls = results.rows.map(p => ({
             ...p,
@@ -161,7 +165,7 @@ app.get("/polls", async (req, res) => {
     }
 })
 
-app.get("/polls/:pollId", async (req, res) => {
+app.get("/polls/:pollId", optionalAuth, async (req, res) => {
     
   try {
     const pollId = req.params.pollId;
@@ -175,42 +179,44 @@ app.get("/polls/:pollId", async (req, res) => {
         p.expires_at,
         u.username,
 
-        COALESCE(SUM(o.vote_count), 0) AS total_votes,
+        EXISTS (
+            SELECT 1
+            FROM votes v2
+            WHERE v2.poll_id = p.id
+            AND v2.user_id = $2
+        ) AS has_voted,
 
+        COALESCE(
+            json_agg(
+            DISTINCT jsonb_build_object(
+                'id', o.id,
+                'text', o.text,
+                'votes', COALESCE(v_counts.count, 0)
+            )
+            ) FILTER (WHERE o.id IS NOT NULL),
+            '[]'
+        ) AS options,
 
-          JSON_AGG(
-            JSON_BUILD_OBJECT(
-              'id', o.id,
-              'text', o.text,
-              'votes', o.vote_count
-            ) 
-            ORDER by o.id
-        ) AS options
+        COALESCE(SUM(v_counts.count), 0)::int AS total_votes
 
-      FROM polls p
+        FROM polls p
 
-      JOIN users u
-        ON p.created_by = u.id
+        JOIN users u ON u.id = p.created_by
 
-      LEFT JOIN (
-        SELECT
-          o.id,
-          o.poll_id,
-          o.text,
-          COUNT(v.id) AS vote_count
-        FROM options o
-        LEFT JOIN votes v
-          ON v.option_id = o.id
-        GROUP BY o.id
-      ) o
-        ON o.poll_id = p.id
+        LEFT JOIN options o ON o.poll_id = p.id
 
-      WHERE p.id = $1
+        LEFT JOIN (
+        SELECT option_id, COUNT(*)::int AS count
+        FROM votes
+        GROUP BY option_id
+        ) v_counts ON v_counts.option_id = o.id
 
-      GROUP BY p.id, u.username
+        WHERE p.id = $1
+
+        GROUP BY p.id, u.username;
     `;
 
-    const response = await db.query(query, [pollId]);
+    const response = await db.query(query, [pollId, req.user]);
 
     if (response.rows.length === 0) {
       return res.status(404).json({ message: "Poll not found" });
