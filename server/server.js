@@ -237,6 +237,10 @@ app.get("/polls/:pollId", optionalAuth, async (req, res) => {
   }
 });
 
+app.get("/polls/user/:username", optionalAuth, async(req, res) => {
+    // res.redirect("/polls")
+})
+
 app.post("/polls", authenticateToken, async (req, res) => {
 
     const pollTitle = req.body.title;
@@ -465,4 +469,39 @@ app.post("/auth/logout", (req, res) => {
     });
     
     return res.json({"message": "Logged out"});
+})
+
+app.get("/user/:username", optionalAuth, async (req, res) => {
+    const username = req.params.username;
+
+    try{
+        const result = await db.query(`SELECT u.id,
+                                              u.username,
+                                              u.email,
+                                              u.created_at,
+                                              COUNT(p.id) AS poll_count
+                                            FROM users u
+                                            LEFT JOIN polls p ON p.created_by = u.id
+                                            WHERE u.username = $1
+                                            GROUP BY u.id`, [username]);
+
+        if(result.rows.length === 0){
+            return res.status(404).json({"message":"User not found"});
+        } 
+        
+        const user = {
+            username: result.rows[0].username,
+            created_at: result.rows[0].created_at,
+            pollCount: Number(result.rows[0].poll_count)
+        };
+
+        if(result.rows[0].id === req.user){
+            user.email = result.rows[0].email;
+        }
+        
+        return res.status(200).json({user})
+    }
+    catch(err){
+        return res.status(400).json({"message": "Server error"});
+    }
 })

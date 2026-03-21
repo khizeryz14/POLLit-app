@@ -7,6 +7,7 @@ import {createBrowserRouter, RouterProvider} from "react-router-dom"
 import CreatePoll from './pages/CreatePoll';
 import Auth from './pages/Auth';
 import RootLayout from './components/RootLayout';
+import Profile from './pages/Profile';
 import { AuthProvider } from './context/AuthContext';
 import { PollProvider } from './context/PollContext';
 
@@ -30,6 +31,10 @@ const router = createBrowserRouter([
         {
             path:"auth",
             element: <Auth/>,
+        },
+        {
+            path: "user/:username",
+            element: <Profile/>,        
         },
     ],
         errorElement: <div>404 Not Found!</div>,
