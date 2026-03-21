@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { normalizePoll } from "../utils/normalizePoll";
 import api from "../api";
 
 const PollContext = createContext();
@@ -9,23 +10,6 @@ export function PollProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-
-  /* =========================
-     Normalize Backend Poll
-  ========================== */
-
-  const normalizePoll = (p) => ({
-    id: p.id,
-    title: p.title,
-    description: p.description,
-    image: p.image_link || null,
-    totalVotes: Number(p.total_votes ?? 0),
-    options: p.options || [],
-    timeLeft: p.timeLeft,
-    expiresAt: p.expires_at,
-    username: p.username,
-    hasVoted: p.has_voted ?? false
-  });
 
   /* =========================
      Fetch Polls (pagination)
@@ -138,6 +122,38 @@ export function PollProvider({ children }) {
 
   };
 
+  const deletePoll = async (pollId) => {
+    try {
+      await api.delete(`/polls/${pollId}`);
+
+      // remove from cache
+      setPolls(prev => prev.filter(p => p.id !== pollId));
+
+      return { success: true };
+    } catch (err) {
+      console.error("Delete failed", err);
+      return { success: false };
+    }
+  };
+
+  const updatePoll = async (pollId, data) => {
+    try {
+      await api.patch(`/polls/${pollId}`, data);
+
+      const res = await api.get(`/polls/${pollId}`);
+      const updated = normalizePoll(res.data.poll);
+
+      setPolls(prev =>
+        prev.map(p => (p.id === pollId ? updated : p))
+      );
+
+      return updated;
+    } catch (err) {
+      console.error("Update failed", err);
+      throw err;
+    }
+  };
+
   /* =========================
      Get Poll by ID (cache first)
   ========================== */
@@ -180,6 +196,8 @@ export function PollProvider({ children }) {
         fetchPolls,
         createPoll,
         votePoll,
+        deletePoll,
+        updatePoll,
         getPollById
       }}
     >

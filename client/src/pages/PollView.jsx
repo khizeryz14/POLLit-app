@@ -1,13 +1,27 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { FiClock, FiCheck, FiUser } from "react-icons/fi";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import {
+  FiClock,
+  FiCheck,
+  FiUser,
+  FiTrash2,
+  FiEdit
+} from "react-icons/fi";
+
 import { usePoll } from "../context/PollContext";
+import { useAuth } from "../context/AuthContext";
+
+import EditPoll from "../components/EditPoll";
+import ConfirmDialog from "../components/ConfirmDialog";
+
 import defaultImage from "../assets/defaultPoll.jpg";
 
 const PollView = () => {
-
   const { pollId } = useParams();
-  const { getPollById, votePoll } = usePoll();
+  const navigate = useNavigate();
+
+  const { getPollById, votePoll, deletePoll, updatePoll } = usePoll();
+  const { user } = useAuth();
 
   const [poll, setPoll] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,6 +29,9 @@ const PollView = () => {
   const [selected, setSelected] = useState(null);
   const [isVoting, setIsVoting] = useState(false);
   const [animateBars, setAnimateBars] = useState(false);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   /* =========================
      Load Poll
@@ -31,7 +48,7 @@ const PollView = () => {
   }, [pollId]);
 
   /* =========================
-     Animate bars AFTER poll is final
+     Animate bars
   ========================== */
 
   useEffect(() => {
@@ -42,11 +59,17 @@ const PollView = () => {
   }, [poll]);
 
   /* =========================
-     Handle Vote (NO optimistic UI)
+     Ownership
+  ========================== */
+
+  const isOwner = user && poll && user.id === poll.userId;
+  const canEdit = isOwner && poll?.totalVotes === 0;
+
+  /* =========================
+     Vote
   ========================== */
 
   const handleVote = async (optionId) => {
-
     if (!poll || poll.hasVoted || isVoting) return;
 
     setIsVoting(true);
@@ -58,12 +81,39 @@ const PollView = () => {
       return;
     }
 
-    // fetch FINAL truth from DB
     const updated = await getPollById(poll.id);
 
-    setSelected(optionId); // now safe (correct option)
-    setPoll(updated);      // now percentages are correct
+    setSelected(optionId);
+    setPoll(updated);
     setIsVoting(false);
+  };
+
+  /* =========================
+     Delete
+  ========================== */
+
+  const handleDelete = async () => {
+    const res = await deletePoll(poll.id);
+
+    if (res.success) {
+      navigate("/");
+    } else {
+      console.error("Delete failed");
+    }
+  };
+
+  /* =========================
+     Update
+  ========================== */
+
+  const handleUpdate = async (data) => {
+    try {
+      const updated = await updatePoll(poll.id, data);
+      setPoll(updated);
+      setIsEditing(false);
+    } catch {
+      console.error("Update failed");
+    }
   };
 
   /* =========================
@@ -85,6 +135,24 @@ const PollView = () => {
       </div>
     );
   }
+
+  /* =========================
+     Edit Mode
+  ========================== */
+
+  if (isEditing) {
+    return (
+      <EditPoll
+        poll={poll}
+        onSave={handleUpdate}
+        onCancel={() => setIsEditing(false)}
+      />
+    );
+  }
+
+  /* =========================
+     Derived
+  ========================== */
 
   const pollImage = poll.image || defaultImage;
   const totalVotes = poll.totalVotes || 0;
@@ -111,15 +179,59 @@ const PollView = () => {
         p-6
       ">
 
-        {/* USER */}
-        <div className="flex items-center gap-2 mb-4">
-          <FiUser className="text-indigo-400" />
-          <Link
-            to={`/user/${poll.username}`}
-            className="text-slate-300 hover:text-indigo-300 transition text-sm"
-          >
-            {poll.username}
-          </Link>
+        {/* TOP BAR */}
+        <div className="flex items-center justify-between mb-4">
+
+          {/* USER */}
+          <div className="flex items-center gap-2">
+            <FiUser className="text-indigo-400" />
+            <Link
+              to={`/user/${poll.username}`}
+              className="text-slate-300 hover:text-indigo-300 transition text-sm"
+            >
+              {poll.username}
+            </Link>
+          </div>
+
+          {/* ACTIONS */}
+          {isOwner && (
+            <div className="flex items-center gap-2">
+
+              {canEdit && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="
+                    w-10 h-10 flex items-center justify-center
+                    rounded-lg
+                    bg-indigo-600/20 text-indigo-400
+                    hover:bg-indigo-500/30 hover:text-indigo-300
+                    border border-indigo-500/20
+                    transition-all duration-200
+                    hover:scale-105 active:scale-95
+                  "
+                >
+                  <FiEdit size={18} />
+                </button>
+              )}
+
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="
+                  w-10 h-10 flex items-center justify-center
+                  rounded-lg
+                  bg-red-600/20 text-red-400
+                  hover:bg-red-500/30 hover:text-red-300
+                  border border-red-500/20
+                  transition-all duration-200
+                  hover:scale-105 active:scale-95
+                "
+              >
+                <FiTrash2 size={18} />
+              </button>
+
+            </div>
+          )}
+
         </div>
 
         {/* IMAGE */}
@@ -156,10 +268,8 @@ const PollView = () => {
                 disabled={hasVoted || isVoting}
                 className={`
                   relative w-full text-left
-                  bg-slate-800/70
-                  border border-slate-700
-                  rounded-lg px-4 py-3
-                  text-slate-300
+                  bg-slate-800/70 border border-slate-700
+                  rounded-lg px-4 py-3 text-slate-300
                   overflow-hidden
                   transition-all duration-200
                   ${!hasVoted ? "hover:bg-indigo-600/20 hover:border-indigo-500/30 hover:scale-[1.01] active:scale-95" : ""}
@@ -167,7 +277,7 @@ const PollView = () => {
                 `}
               >
 
-                {/* RESULT BAR */}
+                {/* BAR */}
                 <div
                   className="
                     absolute inset-y-0 left-0
@@ -187,13 +297,10 @@ const PollView = () => {
                 <div className="relative flex items-center justify-between">
 
                   <span className="flex items-center gap-2">
-
                     {isSelected && hasVoted && (
                       <FiCheck className="text-emerald-400" />
                     )}
-
                     {option.text}
-
                   </span>
 
                   <span className="text-sm w-10 text-right text-indigo-300 font-medium">
@@ -204,7 +311,6 @@ const PollView = () => {
 
               </button>
             );
-
           })}
 
         </div>
@@ -212,7 +318,7 @@ const PollView = () => {
         {/* FOOTER */}
         <div className="flex items-center justify-between text-sm text-slate-500">
 
-          <span>{poll.totalVotes} votes</span>
+          <span>{totalVotes} votes</span>
 
           <div className="flex items-center gap-1">
             <FiClock />
@@ -222,6 +328,22 @@ const PollView = () => {
         </div>
 
       </div>
+
+      {/* DELETE MODAL */}
+      {showDeleteModal && (
+        <div>
+          <ConfirmDialog
+            title="Delete Poll"
+            message="This poll will be permanently deleted. This action cannot be undone."
+            confirmText="Delete"
+            onCancel={() => setShowDeleteModal(false)}
+            onConfirm={() => {
+              setShowDeleteModal(false);
+              handleDelete();
+            }}
+          />
+        </div>
+      )}
 
     </div>
   );

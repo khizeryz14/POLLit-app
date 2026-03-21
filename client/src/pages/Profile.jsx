@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import api from "../api";
 import PollGrid from "../components/PollGrid";
 import UserInfo from "../components/UserInfo";
+import { normalizePoll } from "../utils/normalizePoll";
 
 const Profile = () => {
   const { username } = useParams();
@@ -32,7 +33,8 @@ const Profile = () => {
     const fetchPolls = async () => {
       try {
         const res = await api.get(`/polls/user/${username}`);
-        setPolls(res.data.polls.slice(0, 3));
+        const normalizedPolls = res.data.polls.map(normalizePoll);
+        setPolls(normalizedPolls.slice(0, 3));
       } catch (err) {
         console.error("Poll fetch error:", err);
         setPollError(true);

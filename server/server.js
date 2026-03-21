@@ -102,6 +102,7 @@ app.get("/polls", optionalAuth, async (req, res) => {
                         p.description,
                         p.image_link,
                         p.expires_at,
+                        p.created_by,
                         u.username,
 
                         /* has_voted */
@@ -177,6 +178,7 @@ app.get("/polls/:pollId", optionalAuth, async (req, res) => {
         p.description,
         p.image_link,
         p.expires_at,
+        p.created_by,
         u.username,
 
         EXISTS (
@@ -237,9 +239,96 @@ app.get("/polls/:pollId", optionalAuth, async (req, res) => {
   }
 });
 
-app.get("/polls/user/:username", optionalAuth, async(req, res) => {
-    // res.redirect("/polls")
-})
+app.get("/polls/user/:username", optionalAuth, async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    const page = parseInt(req.query.page) || 1;
+
+    if (page < 1) {
+      return res.status(400).json({ message: "Invalid page number" });
+    }
+
+    const PAGE_SIZE = 10;
+    const limit = PAGE_SIZE;
+    const offset = (page - 1) * PAGE_SIZE;
+
+    const query = `
+      SELECT
+        p.id,
+        p.title,
+        p.description,
+        p.image_link,
+        p.expires_at,
+        p.created_by,
+        u.username,
+
+        /* has_voted */
+        EXISTS (
+          SELECT 1
+          FROM votes v2
+          WHERE v2.poll_id = p.id
+          AND v2.user_id = $1
+        ) AS has_voted,
+
+        /* options */
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object(
+              'id', o.id,
+              'text', o.text,
+              'votes', COALESCE(v_counts.count, 0)
+            )
+          ) FILTER (WHERE o.id IS NOT NULL),
+          '[]'
+        ) AS options,
+
+        /* total votes */
+        COALESCE(SUM(v_counts.count), 0)::int AS total_votes
+
+      FROM polls p
+      JOIN users u ON u.id = p.created_by
+      LEFT JOIN options o ON o.poll_id = p.id
+
+      LEFT JOIN (
+        SELECT option_id, COUNT(*)::int AS count
+        FROM votes
+        GROUP BY option_id
+      ) v_counts ON v_counts.option_id = o.id
+
+      WHERE u.username = $2
+
+      GROUP BY p.id, u.username
+
+      ORDER BY p.created_at DESC
+
+      LIMIT $3 OFFSET $4;
+    `;
+
+    const results = await db.query(query, [
+      req.user || null,
+      username,
+      limit,
+      offset
+    ]);
+
+    const polls = results.rows.map(p => ({
+      ...p,
+      timeLeft: calculateTimeLeft(p.expires_at)
+    }));
+
+    return res.status(200).json({
+      polls,
+      page,
+      hasMore: polls.length === PAGE_SIZE
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch user polls" });
+  }
+});
+
 
 app.post("/polls", authenticateToken, async (req, res) => {
 
@@ -287,6 +376,40 @@ app.post("/polls", authenticateToken, async (req, res) => {
 
     }
 
+
+})
+
+app.delete("/polls/:pollId", authenticateToken, async (req, res) => {
+    const {pollId} = req.params;
+
+    try{
+        await db.query("BEGIN")
+        const creatorResults = await db.query("SELECT created_by FROM polls WHERE id = $1", [pollId]);
+
+        if(creatorResults.rows.length === 0){
+            await db.query("ROLLBACK");
+            return res.status(404).json({"message":"Invalid Poll ID"});
+        }
+
+        if(creatorResults.rows[0].created_by === req.user){
+            await db.query("DELETE FROM votes WHERE poll_id = $1", [pollId])
+            await db.query("DELETE FROM options WHERE poll_id = $1", [pollId]);
+            await db.query("DELETE FROM polls WHERE id = $1", [pollId]);
+            await db.query("COMMIT");
+
+            return res.status(200).json({"success": true, pollId})
+        }else{
+            await db.query("ROLLBACK");
+            return res.status(403).json({"message":"Access denied"});
+        }
+    }
+    catch(err){
+        await db.query("ROLLBACK")
+        return res.status(500).json({"message":"Server error"});
+    }
+})
+
+app.patch("/polls/:pollId", authenticateToken, (req, res) => {
 
 })
 
