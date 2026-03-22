@@ -6,19 +6,28 @@ const EditPoll = ({ poll, onSave, onCancel }) => {
     title: poll.title,
     description: poll.description || "",
     image: poll.image || "",
-    options: poll.options.map(o => o.text)
+    options: poll.options.map(o => ({
+      id: o.id,
+      text: o.text
+    }))
   });
 
   const handleOptionChange = (i, value) => {
     const updated = [...form.options];
-    updated[i] = value;
+    updated[i] = {
+      ...updated[i],
+      text: value
+    };
     setForm({ ...form, options: updated });
   };
 
   const handleSubmit = () => {
     if (!form.title.trim()) return alert("Title required");
 
-    const cleanOptions = form.options.filter(o => o.trim() !== "");
+  const cleanOptions = form.options
+    .map(o => ({ ...o, text: o.text.trim() }))
+    .filter(o => o.text !== "");
+    
     if (cleanOptions.length < 2) {
       return alert("At least 2 options required");
     }
@@ -60,7 +69,7 @@ const EditPoll = ({ poll, onSave, onCancel }) => {
         {form.options.map((opt, i) => (
           <input
             key={i}
-            value={opt}
+            value={opt.text}
             onChange={(e) =>
               handleOptionChange(i, e.target.value)
             }

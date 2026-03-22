@@ -409,8 +409,77 @@ app.delete("/polls/:pollId", authenticateToken, async (req, res) => {
     }
 })
 
-app.patch("/polls/:pollId", authenticateToken, (req, res) => {
+app.patch("/polls/:pollId", authenticateToken, async (req, res) => {
 
+    const {pollId} = req.params;
+    const {title, description, image, options} = req.body;
+
+    if(!title || !options){
+        return res.status(400).json({"message":"Invalid request parameters"})
+    }
+
+    try{
+        await db.query("BEGIN")
+        const creatorResults = await db.query("SELECT created_by FROM polls WHERE id = $1", [pollId]);
+
+        if(creatorResults.rows.length === 0){
+            await db.query("ROLLBACK");
+            return res.status(404).json({"message":"Invalid Poll ID"});
+        }
+        
+        if(creatorResults.rows[0].created_by === req.user){
+
+            const voteCheck = await db.query(
+                "SELECT COUNT(*) FROM votes WHERE poll_id = $1",
+                [pollId]
+            );
+
+            if (Number(voteCheck.rows[0].count) > 0) {
+                await db.query("ROLLBACK");
+                return res.status(400).json({ message: "Cannot edit after votes" });
+            }
+
+
+            const pollResults = await db.query(`UPDATE polls
+                                                        SET
+                                                            title = $1,
+                                                            description = $2,
+                                                            image_link = $3
+                                                        WHERE id = $4
+                                                        RETURNING id, title, description, image_link`, 
+                                                        [title, description, image, pollId]);
+
+            const insertedOptions = [];    
+            
+            for(const option of options){
+                    const optionResult = await db.query(`UPDATE options
+                                                            SET 
+                                                                text = $1
+                                                            WHERE id = $2
+                                                            RETURNING id, text`, 
+                                                            [option.text.trim(), option.id]);
+
+                    insertedOptions.push(optionResult.rows[0])
+            } 
+
+            await db.query("COMMIT");
+
+            const poll = {
+                ...pollResults.rows[0],
+                options: insertedOptions
+            }
+
+            return res.status(200).json({poll});
+        }
+        else{
+            await db.query("ROLLBACK")
+            return res.status(403).json({"message":"Unauthorized to edit poll"});
+        }
+    }
+    catch(err){
+        await db.query("ROLLBACK")
+        return res.status(500).json({"message":"Server error"});
+    }
 })
 
 app.post("/votes", authenticateToken, async (req, res) => {
