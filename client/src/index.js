@@ -8,7 +8,7 @@ import CreatePoll from './pages/CreatePoll';
 import Auth from './pages/Auth';
 import RootLayout from './components/RootLayout';
 import Profile from './pages/Profile';
-import { BrowsePolls } from './pages/BrowsePolls';
+import BrowsePolls from './pages/BrowsePolls';
 import { AuthProvider } from './context/AuthContext';
 import { PollProvider } from './context/PollContext';
 

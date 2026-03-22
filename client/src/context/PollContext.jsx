@@ -15,25 +15,43 @@ export function PollProvider({ children }) {
      Fetch Polls (pagination)
   ========================== */
 
-  const fetchPolls = async (pageNum = 1) => {
+  const fetchPolls = async (params = {}) => {
     try {
+      let {
+        page: pageNum = 1,
+        search = "",
+        sort = "new",
+        reset = false
+      } = params;
+
+      // 🔥 backward compatibility
+      if (typeof params === "number") {
+        pageNum = params;
+        search = "";
+        sort = "new";
+        reset = pageNum === 1;
+      }
 
       setLoading(true);
 
-      const res = await api.get(`/polls?page=${pageNum}`);
+      const query = new URLSearchParams({
+        page: pageNum,
+        sort,
+        ...(search && { search })
+      }).toString();
+
+      const res = await api.get(`/polls?${query}`);
 
       const rawPolls = res.data.polls || [];
-
       const newPolls = rawPolls.map(normalizePoll);
 
-      if (pageNum === 1) {
+      if (reset || pageNum === 1) {
         setPolls(newPolls);
       } else {
         setPolls(prev => [...prev, ...newPolls]);
       }
 
       setHasMore(res.data.hasMore ?? false);
-
       setPage(pageNum);
 
     } catch (err) {
