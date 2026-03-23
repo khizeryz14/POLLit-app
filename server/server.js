@@ -61,110 +61,115 @@ function calculateTimeLeft(expiresAt){
 }
 
 app.get("/polls", optionalAuth, async (req, res) => {
-    try{
-        const page = parseInt(req.query.page) || 1;
 
-        if(page < 1){
-            return res.status(400).json({"message": "Invalid page number"})
-        }
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const search = req.query.search || "";
+    const sort = req.query.sort || "new";
 
-        const PAGE_SIZE = 10;
-
-        const limit = PAGE_SIZE;
-        const offset = (page - 1) * PAGE_SIZE;
-
-        const sort = req.query.sort || "new";
-
-        let orderBy;
-
-        switch (sort) {
-            case "trending":
-                orderBy = "total_votes DESC";
-                break;
-
-            case "ending":
-                orderBy = "p.expires_at ASC";
-                break;
-
-            case "user":
-                orderBy = "u.username ASC";
-                break;
-
-            default:
-                orderBy = "p.created_at DESC"; // newest
-        }
-
-        //[QUERY]
-
-        const query = `SELECT
-                        p.id,
-                        p.title,
-                        p.description,
-                        p.image_link,
-                        p.expires_at,
-                        p.created_by,
-                        u.username,
-
-                        /* has_voted */
-                        EXISTS (
-                            SELECT 1
-                            FROM votes v2
-                            WHERE v2.poll_id = p.id
-                            AND v2.user_id = $1
-                        ) AS has_voted,
-
-                        /* options array */
-                        COALESCE(
-                            json_agg(
-                            DISTINCT jsonb_build_object(
-                                'id', o.id,
-                                'text', o.text,
-                                'votes', COALESCE(v_counts.count, 0)
-                            )
-                            ) FILTER (WHERE o.id IS NOT NULL),
-                            '[]'
-                        ) AS options,
-
-                        /* total votes */
-                        COALESCE(SUM(v_counts.count), 0)::int AS total_votes
-
-                        FROM polls p
-
-                        JOIN users u ON u.id = p.created_by
-
-                        LEFT JOIN options o ON o.poll_id = p.id
-
-                        /* pre-count votes per option (IMPORTANT) */
-                        LEFT JOIN (
-                        SELECT option_id, COUNT(*)::int AS count
-                        FROM votes
-                        GROUP BY option_id
-                        ) v_counts ON v_counts.option_id = o.id
-
-                        GROUP BY p.id, u.username
-
-                        ORDER BY p.created_at DESC
-
-                        LIMIT $2 OFFSET $3;`;
-
-        const results = await db.query(query, [req.user, limit, offset]);
-
-        const polls = results.rows.map(p => ({
-            ...p,
-            timeLeft: calculateTimeLeft(p.expires_at)
-        }))
-
-        return res.status(200).json({
-            polls,
-            page,
-            hasMore: polls.length === PAGE_SIZE
-        });
+    if (page < 1) {
+      return res.status(400).json({ message: "Invalid page number" });
     }
-    catch(err){
-        console.error(err)
-        res.status(500).json({"message": "Failed to fetch polls"});
+
+    const PAGE_SIZE = 10;
+    const limit = PAGE_SIZE;
+    const offset = (page - 1) * PAGE_SIZE;
+
+    let orderBy;
+    switch (sort) {
+      case "trending":
+        orderBy = "total_votes DESC";
+        break;
+      case "ending":
+        orderBy = "p.expires_at ASC";
+        break;
+      default:
+        orderBy = "p.created_at DESC";
     }
-})
+
+    let searchCondition = "";
+    let values = [req.user || null, limit, offset];
+    let paramIndex = values.length + 1;
+
+    if (search) {
+      searchCondition = `
+        AND (
+          p.title ILIKE $${paramIndex}
+          OR p.description ILIKE $${paramIndex}
+        )
+      `;
+      values.push(`%${search}%`);
+    }
+
+    /* 🔥 FINAL QUERY */
+    const query = `
+      SELECT
+        p.id,
+        p.title,
+        p.description,
+        p.image_link,
+        p.expires_at,
+        p.created_by,
+        u.username,
+
+        EXISTS (
+          SELECT 1
+          FROM votes v2
+          WHERE v2.poll_id = p.id
+          AND v2.user_id = $1
+        ) AS has_voted,
+
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object(
+              'id', o.id,
+              'text', o.text,
+              'votes', COALESCE(v_counts.count, 0)
+            )
+          ) FILTER (WHERE o.id IS NOT NULL),
+          '[]'
+        ) AS options,
+
+        COALESCE(SUM(v_counts.count), 0)::int AS total_votes
+
+      FROM polls p
+      JOIN users u ON u.id = p.created_by
+      LEFT JOIN options o ON o.poll_id = p.id
+
+      LEFT JOIN (
+        SELECT option_id, COUNT(*)::int AS count
+        FROM votes
+        GROUP BY option_id
+      ) v_counts ON v_counts.option_id = o.id
+
+      WHERE 1=1
+      ${searchCondition}
+
+      GROUP BY p.id, u.username
+
+      ORDER BY ${orderBy}
+
+      LIMIT $2 OFFSET $3;
+    `;
+
+    const results = await db.query(query, values);
+
+    const polls = results.rows.map(p => ({
+      ...p,
+      timeLeft: calculateTimeLeft(p.expires_at)
+    }));
+
+    return res.status(200).json({
+      polls,
+      page,
+      hasMore: polls.length === PAGE_SIZE
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch polls" });
+  }
+});
 
 app.get("/polls/:pollId", optionalAuth, async (req, res) => {
     
