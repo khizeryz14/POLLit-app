@@ -47,16 +47,18 @@ const PollView = () => {
     load();
   }, [pollId]);
 
+  const isExpired = poll?.timeLeft === "Ended";
+
   /* =========================
      Animate bars
   ========================== */
 
   useEffect(() => {
-    if (poll?.hasVoted) {
+    if (poll?.hasVoted || isExpired) {
       setAnimateBars(false);
       setTimeout(() => setAnimateBars(true), 50);
     }
-  }, [poll]);
+  }, [poll, isExpired]);
 
   /* =========================
      Ownership
@@ -70,7 +72,13 @@ const PollView = () => {
   ========================== */
 
   const handleVote = async (optionId) => {
-    if (!poll || poll.hasVoted || isVoting) return;
+
+    if (!user) {
+      navigate("/auth", { state: { from: location.pathname } });
+      return;
+    }
+
+    if (!poll || poll.hasVoted || isVoting || isExpired) return;
 
     setIsVoting(true);
 
@@ -265,14 +273,17 @@ const PollView = () => {
               <button
                 key={option.id}
                 onClick={() => handleVote(option.id)}
-                disabled={hasVoted || isVoting}
+                disabled={hasVoted || isVoting || isExpired}
                 className={`
                   relative w-full text-left
                   bg-slate-800/70 border border-slate-700
                   rounded-lg px-4 py-3 text-slate-300
                   overflow-hidden
                   transition-all duration-200
-                  ${!hasVoted ? "hover:bg-indigo-600/20 hover:border-indigo-500/30 hover:scale-[1.01] active:scale-95" : ""}
+                  ${(!hasVoted && !isExpired)
+                    ? "hover:bg-indigo-600/20 hover:border-indigo-500/30 hover:scale-[1.01] active:scale-95"
+                    : "opacity-60 cursor-not-allowed"
+                  }
                   ${isSelected && hasVoted ? "border-emerald-400/40 bg-emerald-500/10" : ""}
                 `}
               >
@@ -287,7 +298,7 @@ const PollView = () => {
                   "
                   style={{
                     width:
-                      hasVoted && animateBars
+                      (hasVoted || isExpired) && animateBars
                         ? `${percent}%`
                         : "0%"
                   }}
@@ -304,7 +315,7 @@ const PollView = () => {
                   </span>
 
                   <span className="text-sm w-10 text-right text-indigo-300 font-medium">
-                    {hasVoted ? `${percent}%` : ""}
+                    {(hasVoted || isExpired) ? `${percent}%` : ""}
                   </span>
 
                 </div>

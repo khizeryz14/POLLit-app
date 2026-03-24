@@ -9,6 +9,7 @@ import jwt from "jsonwebtoken"
 import cookieParser from "cookie-parser";
 import authenticateToken from "./middleware/authMiddleware.js";
 import { optionalAuth } from "./middleware/optionalAuthMiddleware.js";
+import { generalLimiter, createLimiter, voteLimiter } from "./middleware/rateLimitMiddleware.js";
 
 const app = express();
 const PORT = process.env.PORT;
@@ -60,7 +61,7 @@ function calculateTimeLeft(expiresAt){
     return `${days}d left`;
 }
 
-app.get("/polls", optionalAuth, async (req, res) => {
+app.get("/polls", generalLimiter, optionalAuth, async (req, res) => {
 
   try {
     const page = parseInt(req.query.page) || 1;
@@ -171,7 +172,7 @@ app.get("/polls", optionalAuth, async (req, res) => {
   }
 });
 
-app.get("/polls/:pollId", optionalAuth, async (req, res) => {
+app.get("/polls/:pollId", generalLimiter, optionalAuth, async (req, res) => {
     
   try {
     const pollId = req.params.pollId;
@@ -244,7 +245,7 @@ app.get("/polls/:pollId", optionalAuth, async (req, res) => {
   }
 });
 
-app.get("/polls/user/:username", optionalAuth, async (req, res) => {
+app.get("/polls/user/:username", generalLimiter, optionalAuth, async (req, res) => {
   const { username } = req.params;
 
   try {
@@ -335,7 +336,7 @@ app.get("/polls/user/:username", optionalAuth, async (req, res) => {
 });
 
 
-app.post("/polls", authenticateToken, async (req, res) => {
+app.post("/polls", createLimiter, authenticateToken, async (req, res) => {
 
     const pollTitle = req.body.title;
     const pollDesc = req.body.desc || null;
@@ -384,7 +385,7 @@ app.post("/polls", authenticateToken, async (req, res) => {
 
 })
 
-app.delete("/polls/:pollId", authenticateToken, async (req, res) => {
+app.delete("/polls/:pollId", createLimiter, authenticateToken, async (req, res) => {
     const {pollId} = req.params;
 
     try{
@@ -414,7 +415,7 @@ app.delete("/polls/:pollId", authenticateToken, async (req, res) => {
     }
 })
 
-app.patch("/polls/:pollId", authenticateToken, async (req, res) => {
+app.patch("/polls/:pollId", createLimiter, authenticateToken, async (req, res) => {
 
     const {pollId} = req.params;
     const {title, description, image, options} = req.body;
@@ -487,7 +488,7 @@ app.patch("/polls/:pollId", authenticateToken, async (req, res) => {
     }
 })
 
-app.post("/votes", authenticateToken, async (req, res) => {
+app.post("/votes", voteLimiter, authenticateToken, async (req, res) => {
     const pollId = req.body.pollId;
     const user = req.user; //authenticateToken attaches userId as 'user' on the request
     const optionId = req.body.optionId;
@@ -498,6 +499,14 @@ app.post("/votes", authenticateToken, async (req, res) => {
     
     try{
         await db.query("BEGIN")
+        const pollCheck = await db.query("SELECT expires_at from polls WHERE id = $1", [pollId]);
+        const expiresAt = new Date(pollCheck.rows[0].expires_at);
+
+        if (expiresAt <= new Date()) {
+            await db.query("ROLLBACK");
+            return res.status(400).json({ message: "Poll has ended" });
+        }
+
         const existingVote = await db.query("SELECT COUNT(*)::int AS entries from votes WHERE poll_id = $1 AND user_id = $2", [pollId, user]);
 
         if (existingVote.rows[0].entries > 0 ){
@@ -551,7 +560,7 @@ app.post("/votes", authenticateToken, async (req, res) => {
     }
 })
 
-app.post("/auth/login", async (req, res) => {
+app.post("/auth/login", generalLimiter, async (req, res) => {
     try{
         const {email, password} = req.body;
         const query = 'SELECT id, username, email, password_hash FROM users WHERE email = $1';
@@ -597,7 +606,7 @@ app.post("/auth/login", async (req, res) => {
 
 })
 
-app.post("/auth/register", async (req, res) => {
+app.post("/auth/register", createLimiter, async (req, res) => {
     const username = req.body.username;
     const email = req.body.email;
     
@@ -633,7 +642,7 @@ app.post("/auth/register", async (req, res) => {
     }
 })
 
-app.get("/auth/me", authenticateToken, async (req, res) => {
+app.get("/auth/me", generalLimiter, authenticateToken, async (req, res) => {
     try{
         const query = 'SELECT id, username, email FROM users WHERE id = $1';
         const results = await db.query(query, [req.user]);
@@ -656,7 +665,7 @@ app.get("/auth/me", authenticateToken, async (req, res) => {
     }
 })
 
-app.post("/auth/logout", (req, res) => {
+app.post("/auth/logout", generalLimiter, (req, res) => {
 
     res.clearCookie("token", {
         httpOnly: true,
@@ -668,7 +677,7 @@ app.post("/auth/logout", (req, res) => {
     return res.json({"message": "Logged out"});
 })
 
-app.get("/user/:username", optionalAuth, async (req, res) => {
+app.get("/user/:username", generalLimiter, optionalAuth, async (req, res) => {
     const username = req.params.username;
 
     try{

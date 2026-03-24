@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function Auth() {
   const [mode, setMode] = useState("login");
@@ -12,6 +12,7 @@ export default function Auth() {
 
   const { login, register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async () => {
     if (!email || !password || (mode === "signup" && !username)) return;
@@ -26,7 +27,7 @@ export default function Auth() {
         await register(username, email, password);
       }
 
-      navigate("/"); // redirect after success
+      navigate(location.state?.from || "/"); // redirect after success
     } catch (err) {
       setError(
         err.response?.data?.message || "Authentication failed"

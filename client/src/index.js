@@ -11,6 +11,7 @@ import Profile from './pages/Profile';
 import BrowsePolls from './pages/BrowsePolls';
 import { AuthProvider } from './context/AuthContext';
 import { PollProvider } from './context/PollContext';
+import ProtectedRoute from './utils/ProtectedRoute';
 
 const router = createBrowserRouter([
     {
@@ -31,7 +32,7 @@ const router = createBrowserRouter([
         },
         {
             path: "createPoll",
-            element: <CreatePoll/>
+            element: <ProtectedRoute> <CreatePoll/> </ProtectedRoute>
         },
         {
             path:"auth",

@@ -138,20 +138,6 @@ const Navbar = () => {
                 ">
 
                   <Link
-                    to="/polls"
-                    onClick={() => setOpen(false)}
-                    className="
-                      flex items-center gap-2
-                      px-4 py-2 text-sm
-                      text-slate-300 hover:text-white
-                      hover:bg-slate-800 transition
-                    "
-                  >
-                    <FiList />
-                    My Polls
-                  </Link>
-
-                  <Link
                     to={`/user/${user.username}`}
                     onClick={() => setOpen(false)}
                     className="
