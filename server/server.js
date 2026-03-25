@@ -10,6 +10,7 @@ import cookieParser from "cookie-parser";
 import authenticateToken from "./middleware/authMiddleware.js";
 import { optionalAuth } from "./middleware/optionalAuthMiddleware.js";
 import { generalLimiter, createLimiter, voteLimiter } from "./middleware/rateLimitMiddleware.js";
+import { validateFields } from "./middleware/validatorMiddleware.js";
 
 const app = express();
 const PORT = process.env.PORT;
@@ -606,7 +607,7 @@ app.post("/auth/login", generalLimiter, async (req, res) => {
 
 })
 
-app.post("/auth/register", createLimiter, async (req, res) => {
+app.post("/auth/register", createLimiter, validateFields, async (req, res) => {
     const username = req.body.username;
     const email = req.body.email;
 
