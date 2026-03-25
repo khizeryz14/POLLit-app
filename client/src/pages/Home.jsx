@@ -20,7 +20,7 @@ const Home = () => {
   const latest = polls.slice(6, 12);
 
   return (
-    <div className="w-full flex flex-col items-center">
+    <div className="w-full flex flex-col items-center animate-[fadeIn_0.3s_ease]">
 
       {/* 🔥 HERO (Animated Gradient) */}
       <section className="w-full relative overflow-hidden">

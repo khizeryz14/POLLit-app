@@ -33,7 +33,7 @@ const BrowsePolls = () => {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-4">
+    <div className="w-full max-w-6xl mx-auto p-4 animate-[fadeIn_0.3s_ease]">
 
       {/* 🔍 Search + Sort */}
       <SearchBar

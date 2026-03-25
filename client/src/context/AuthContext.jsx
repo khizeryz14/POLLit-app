@@ -44,7 +44,6 @@ export function AuthProvider({ children }) {
     setUser(data.user);
   }
   catch(err){
-    console.log(err.response)
     throw err;
   }
   };

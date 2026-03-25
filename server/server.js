@@ -609,6 +609,17 @@ app.post("/auth/login", generalLimiter, async (req, res) => {
 app.post("/auth/register", createLimiter, async (req, res) => {
     const username = req.body.username;
     const email = req.body.email;
+
+    const existing = await db.query(
+    `SELECT 1 FROM users WHERE email = $1 OR username = $2`,
+    [email, username]
+    );
+
+    if (existing.rows.length > 0) {
+    return res.status(400).json({
+        message: "Email or username already in use"
+    });
+    }
     
     const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
     
