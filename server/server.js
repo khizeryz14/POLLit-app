@@ -1,8 +1,7 @@
-import dotenv from "dotenv"
-dotenv.config();
+import 'dotenv/config';
 
 import express from "express";
-import pg from "pg";
+import {Pool} from "pg";
 import bcrypt from "bcrypt";
 import cors from "cors";
 import jwt from "jsonwebtoken"
@@ -29,13 +28,12 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser())
 
-const db = new pg.Client({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT,
-})
+const db = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false, // Required for Neon/hosted Postgres
+  },
+});
 
 db.connect();
 
