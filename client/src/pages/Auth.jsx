@@ -45,6 +45,17 @@ export default function Auth() {
     return Object.keys(newErrors).length === 0;
   };
 
+  /* Check for Enter */
+
+  const handleKeyPress = (e) => {
+    if(e.key === "Enter"){
+      if(loading || (mode === "signup" && !isSignupValid)) return;
+      e.preventDefault();
+      handleSubmit();
+      return;
+    }
+  }
+
   /* =========================
      Submit
   ========================== */
@@ -145,7 +156,7 @@ export default function Auth() {
         )}
 
         {/* Form */}
-        <div className="space-y-4">
+        <div className="space-y-4" onKeyDown={handleKeyPress}>
 
           {/* Username */}
           {mode === "signup" && (

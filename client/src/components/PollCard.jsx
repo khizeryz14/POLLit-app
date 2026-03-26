@@ -65,7 +65,7 @@ const PollCard = ({
   };
 
   return (
-    <div className="group bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/40 hover:shadow-lg hover:shadow-indigo-600/10">
+    <div className="group bg-slate-900/60 backdrop-blur-md border flex flex-col h-full border-slate-800 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/40 hover:shadow-lg hover:shadow-indigo-600/10">
 
       <Link to={`/polls/${pollId}`}>
         <div className="h-40 w-full overflow-hidden">
@@ -91,7 +91,7 @@ const PollCard = ({
       </Link>
 
       {/* OPTIONS */}
-      <div className="px-5 pb-4 space-y-2">
+      <div className="px-5 pb-4 space-y-2 flex-1">
         {safeOptions.slice(0, 2).map(opt => {
 
           const percent = getPercent(opt.votes);

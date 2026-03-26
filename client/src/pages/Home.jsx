@@ -99,13 +99,12 @@ const Home = () => {
                     key={poll.id}
                     className="
                       min-w-[300px] max-w-[300px]
-                      h-[420px]
                       flex-shrink-0
                       snap-start
                     "
                   >
                     {/* force consistent height */}
-                    <div className="h-full overflow-hidden rounded-xl">
+                    <div className="h-full rounded-xl">
                       <PollCard
                         pollId={poll.id}
                         title={poll.title}

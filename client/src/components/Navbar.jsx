@@ -11,7 +11,7 @@ import {
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const Navbar = () => {
+const Navbar = ({showToast}) => {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef();
@@ -154,7 +154,10 @@ const Navbar = () => {
                   <div className="border-t border-slate-800 my-1" />
 
                   <button
-                    onClick={logout}
+                    onClick={() =>{
+                    logout();
+                    showToast("Logged out successfully");
+                    }}
                     className="
                       w-full flex items-center gap-2
                       px-4 py-2 text-sm
