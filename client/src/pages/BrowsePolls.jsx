@@ -9,17 +9,17 @@ const BrowsePolls = () => {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("new");
 
-  // 🔥 initial load
+  //Initial load
   useEffect(() => {
     fetchPolls({ page: 1, search, sort, reset: true });
   }, []);
 
-  // 🔍 search change
+  //Search change
   useEffect(() => {
     fetchPolls({ page: 1, search, sort, reset: true });
   }, [search]);
 
-  // 🔽 sort change
+  //Sort change
   useEffect(() => {
     fetchPolls({ page: 1, search, sort, reset: true });
   }, [sort]);
@@ -35,21 +35,21 @@ const BrowsePolls = () => {
   return (
     <div className="w-full max-w-6xl mx-auto p-4 animate-[fadeIn_0.3s_ease]">
 
-      {/* 🔍 Search + Sort */}
+      {/* Search + Sort */}
       <SearchBar
         onSearchChange={setSearch}
         onSortChange={setSort}
       />
 
-      {/* 📊 Polls */}
+      {/* Polls */}
       <PollGrid polls={polls} />
 
-      {/* ⏳ Loading */}
+      {/* Loading */}
       {loading && (
         <p className="text-center text-slate-400 mt-4">Loading...</p>
       )}
 
-      {/* 🔄 Load More */}
+      {/* Load More */}
       {!loading && hasMore && (
         <div className="flex justify-center mt-6">
           <button
@@ -61,7 +61,7 @@ const BrowsePolls = () => {
         </div>
       )}
 
-      {/* ❌ No results */}
+      {/* No results */}
       {!loading && polls.length === 0 && (
         <p className="text-center text-slate-400 mt-6">
           No polls found.

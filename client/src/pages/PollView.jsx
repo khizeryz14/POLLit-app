@@ -33,9 +33,7 @@ const PollView = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  /* =========================
-     Load Poll
-  ========================== */
+  //Load poll
 
   useEffect(() => {
     const load = async () => {
@@ -49,9 +47,7 @@ const PollView = () => {
 
   const isExpired = poll?.timeLeft === "Ended";
 
-  /* =========================
-     Animate bars
-  ========================== */
+  //Animate bars
 
   useEffect(() => {
     if (poll?.hasVoted || isExpired) {
@@ -60,16 +56,12 @@ const PollView = () => {
     }
   }, [poll, isExpired]);
 
-  /* =========================
-     Ownership
-  ========================== */
+  //Ownership
 
   const isOwner = user && poll && user.id === poll.userId;
   const canEdit = isOwner && poll?.totalVotes === 0;
 
-  /* =========================
-     Vote
-  ========================== */
+  //Vote
 
   const handleVote = async (optionId) => {
 
@@ -96,9 +88,7 @@ const PollView = () => {
     setIsVoting(false);
   };
 
-  /* =========================
-     Delete
-  ========================== */
+  //Delete
 
   const handleDelete = async () => {
     const res = await deletePoll(poll.id);
@@ -110,9 +100,7 @@ const PollView = () => {
     }
   };
 
-  /* =========================
-     Update
-  ========================== */
+  //Update
 
   const handleUpdate = async (data) => {
     try {
@@ -124,9 +112,7 @@ const PollView = () => {
     }
   };
 
-  /* =========================
-     UI States
-  ========================== */
+  //UI states
 
   if (loading) {
     return (
@@ -144,9 +130,7 @@ const PollView = () => {
     );
   }
 
-  /* =========================
-     Edit Mode
-  ========================== */
+  //Editing
 
   if (isEditing) {
     return (
@@ -158,10 +142,6 @@ const PollView = () => {
     );
   }
 
-  /* =========================
-     Derived
-  ========================== */
-
   const pollImage = poll.image || defaultImage;
   const totalVotes = poll.totalVotes || 0;
   const hasVoted = poll.hasVoted;
@@ -171,10 +151,9 @@ const PollView = () => {
     return Math.round((votes / totalVotes) * 100);
   };
 
-  /* =========================
-     Render
-  ========================== */
 
+  //Render
+  
   return (
     <div className="max-w-3xl mx-auto p-6">
 

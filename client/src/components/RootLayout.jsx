@@ -8,10 +8,10 @@ function RootLayout() {
 
   const hideLayout = location.pathname === "/auth";
 
-  /* 🔥 GLOBAL TOAST STATE */
+  /* GLOBAL TOAST STATE */
   const [toast, setToast] = useState(null);
 
-  /* 🔥 AUTO DISMISS */
+  /* AUTO DISMISS */
   useEffect(() => {
     if (!toast) return;
 
@@ -36,7 +36,7 @@ function RootLayout() {
       {/* FOOTER */}
       {!hideLayout && <Footer />}
 
-      {/* 🔥 GLOBAL TOAST */}
+      {/* GLOBAL TOAST */}
       {toast && (
         <div
           className="

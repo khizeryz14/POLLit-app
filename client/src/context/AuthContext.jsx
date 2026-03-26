@@ -22,7 +22,8 @@ export function AuthProvider({ children }) {
 
   }, []);
 
-  /* LOGIN */
+  //Auth
+
   const login = async (email, password) => {
     const { data } = await api.post("/auth/login", {
       email,
@@ -32,7 +33,6 @@ export function AuthProvider({ children }) {
     setUser(data.user);
   };
 
-  /* REGISTER → auto login */
   const register = async (username, email, password) => {
     try{
     const { data } = await api.post("/auth/register", {

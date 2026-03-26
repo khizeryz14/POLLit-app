@@ -21,7 +21,7 @@ const UserInfo = ({ user }) => {
       shadow-xl
     ">
 
-      {/* subtle glow accent */}
+      {/* Subtle glow accent */}
       <div className="absolute inset-0 bg-indigo-600/5 pointer-events-none" />
 
       {/* Avatar */}

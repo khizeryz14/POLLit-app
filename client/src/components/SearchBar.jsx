@@ -6,7 +6,7 @@ const SearchBar = ({ onSearchChange, onSortChange }) => {
   const [debounced, setDebounced] = useState("");
   const [sort, setSort] = useState("new");
 
-  // 🔥 debounce
+  //Debounce
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebounced(input);
@@ -15,7 +15,7 @@ const SearchBar = ({ onSearchChange, onSortChange }) => {
     return () => clearTimeout(timer);
   }, [input]);
 
-  // trigger parent search
+  //Trigger parent search
   useEffect(() => {
     onSearchChange(debounced);
   }, [debounced]);
@@ -34,7 +34,7 @@ const SearchBar = ({ onSearchChange, onSortChange }) => {
   return (
     <div className="w-full flex flex-col md:flex-row gap-3 mb-6">
       
-      {/* 🔍 Search Input */}
+      {/* Search Input */}
       <div className="flex-1 relative">
         <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
 
@@ -56,7 +56,7 @@ const SearchBar = ({ onSearchChange, onSortChange }) => {
         )}
       </div>
 
-      {/* 🔽 Sort Dropdown */}
+      {/* Sort Dropdown */}
       <select
         value={sort}
         onChange={handleSortChange}

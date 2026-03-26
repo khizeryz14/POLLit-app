@@ -20,7 +20,7 @@ const Profile = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  /* 🔹 FETCH USER */
+  /* FETCH USER */
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -36,7 +36,7 @@ const Profile = () => {
     fetchUser();
   }, [username]);
 
-  /* 🔹 FETCH POLLS (paginated) */
+  /* FETCH POLLS (paginated) */
   const fetchUserPolls = async (pageNum = 1, reset = false) => {
     try {
       if (pageNum === 1) setPollsLoading(true);
@@ -64,12 +64,12 @@ const Profile = () => {
     }
   };
 
-  /* 🔹 INITIAL LOAD */
+  /* INITIAL LOAD */
   useEffect(() => {
     fetchUserPolls(1, true);
   }, [username]);
 
-  /* 🔹 LOAD MORE */
+  /* LOAD MORE */
   const handleLoadMore = () => {
     fetchUserPolls(page + 1);
   };
@@ -77,14 +77,14 @@ const Profile = () => {
   return (
     <div className="max-w-6xl mx-auto px-6 py-8 space-y-10 animate-[fadeIn_0.3s_ease]">
 
-      {/* 👤 USER INFO */}
+      {/* USER INFO */}
       {userLoading ? (
         <div className="animate-pulse bg-slate-900/60 border border-slate-800 rounded-xl p-6 h-24" />
       ) : (
         <UserInfo user={user} />
       )}
 
-      {/* 📊 USER POLLS */}
+      {/* USER POLLS */}
       <div className="space-y-6">
 
         <div className="flex items-center justify-between">
@@ -103,7 +103,7 @@ const Profile = () => {
           <PollGrid polls={polls} />
         )}
 
-        {/* 🔄 LOAD MORE */}
+        {/* LOAD MORE */}
         {!pollsLoading && hasMore && (
           <div className="flex justify-center pt-4">
             <button

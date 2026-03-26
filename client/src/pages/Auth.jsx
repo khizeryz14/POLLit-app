@@ -19,9 +19,7 @@ export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  /* =========================
-     Validation (Signup only)
-  ========================== */
+  //Validation
 
   const validateForm = () => {
     const newErrors = {};
@@ -56,9 +54,7 @@ export default function Auth() {
     }
   }
 
-  /* =========================
-     Submit
-  ========================== */
+  //Submit
 
   const handleSubmit = async () => {
     if (!email || !password || (mode === "signup" && !username)) return;
@@ -86,18 +82,14 @@ export default function Auth() {
     }
   };
 
-  /* =========================
-     Derived
-  ========================== */
+  //Validate fields
 
   const isSignupValid =
     validateEmail(email) &&
     validateUsername(username) &&
     password.length >= 6;
 
-  /* =========================
-     UI
-  ========================== */
+    //Render
 
   return (
     <div className="flex-1 flex items-center justify-center px-4 overflow-hidden">

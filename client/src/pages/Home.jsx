@@ -60,7 +60,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* 📈 FEATURED */}
+      {/* FEATURED */}
       <section className="w-full max-w-6xl px-6 mt-16">
 
         <div className="flex items-center justify-between mb-6">
@@ -82,7 +82,7 @@ const Home = () => {
         ) : (
           <div className="relative">
 
-            {/* clip scrollbar visually */}
+            {/* Clip scrollbar visually */}
             <div className="overflow-hidden">
               <div
                 className="
@@ -103,7 +103,7 @@ const Home = () => {
                       snap-start
                     "
                   >
-                    {/* force consistent height */}
+                    {/* Force consistent height */}
                     <div className="h-full rounded-xl">
                       <PollCard
                         pollId={poll.id}
@@ -130,7 +130,7 @@ const Home = () => {
         )}
       </section>
 
-      {/* 🆕 LATEST */}
+      {/* LATEST */}
       <section className="w-full max-w-6xl px-6 mt-16 mb-20">
         
         <div className="flex items-center justify-between mb-6">

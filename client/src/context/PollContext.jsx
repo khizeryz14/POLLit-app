@@ -11,9 +11,6 @@ export function PollProvider({ children }) {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  /* =========================
-     Fetch Polls (pagination)
-  ========================== */
 
   const fetchPolls = async (params = {}) => {
     try {
@@ -24,7 +21,6 @@ export function PollProvider({ children }) {
         reset = false
       } = params;
 
-      // 🔥 backward compatibility
       if (typeof params === "number") {
         pageNum = params;
         search = "";
@@ -67,9 +63,6 @@ export function PollProvider({ children }) {
     fetchPolls(1);
   }, []);
 
-  /* =========================
-     Create Poll
-  ========================== */
 
   const createPoll = async (title, options, desc, image) => {
     try {
@@ -94,9 +87,7 @@ export function PollProvider({ children }) {
     }
   };
 
-  /* =========================
-     Vote Poll (optimistic)
-  ========================== */
+  //Poll interaction
 
   const votePoll = async (pollId, optionId) => {
 
@@ -172,9 +163,7 @@ export function PollProvider({ children }) {
     }
   };
 
-  /* =========================
-     Get Poll by ID (cache first)
-  ========================== */
+  //Poll fetching
 
   const getPollById = async (id) => {
 
