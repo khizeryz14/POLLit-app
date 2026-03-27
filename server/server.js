@@ -19,7 +19,7 @@ const saltRounds = Number(process.env.SALT_ROUNDS);
 export const JWT_SECRET = process.env.JWT_SECRET
 
 app.use(cors({
-    origin: "https://pollit-app.vercel.app/",
+    origin: "https://pollit-app.vercel.app",
     credentials: true
 }
 ));
