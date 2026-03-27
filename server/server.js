@@ -19,7 +19,7 @@ const saltRounds = Number(process.env.SALT_ROUNDS);
 export const JWT_SECRET = process.env.JWT_SECRET
 
 app.use(cors({
-    origin: "http://localhost:3000",
+    origin: "https://pollit-app.vercel.app/",
     credentials: true
 }
 ));
@@ -585,8 +585,8 @@ app.post("/auth/login", generalLimiter, async (req, res) => {
 
             res.cookie("token", token, {
                 httpOnly: true,
-                sameSite: "lax",
-                secure: false,
+                sameSite: "None",
+                secure: true,
                 path: "/",
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });
