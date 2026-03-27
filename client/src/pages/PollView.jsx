@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import {
   FiClock,
   FiCheck,
@@ -19,6 +19,7 @@ import defaultImage from "../assets/defaultPoll.jpg";
 const PollView = () => {
   const { pollId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { getPollById, votePoll, deletePoll, updatePoll } = usePoll();
   const { user } = useAuth();
