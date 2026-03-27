@@ -639,8 +639,8 @@ app.post("/auth/register", createLimiter, validateFields, async (req, res) => {
 
         res.cookie("token", token, {
             httpOnly: true,
-            sameSite: "lax",
-            secure: false,
+            sameSite: "None",
+            secure: true,
             path: "/",
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
