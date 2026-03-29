@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { usePoll } from "../context/PollContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 
-export default function CreatePoll({ showToast }) {
+export default function CreatePoll() {
   const { createPoll } = usePoll();
+  const {showToast} = useOutletContext();
   const navigate = useNavigate();
   const [question, setQuestion] = useState("");
   const [description, setDescription] = useState("");
@@ -43,7 +44,7 @@ export default function CreatePoll({ showToast }) {
         description || null,
         image || null
       );
-      showToast("Poll submitted successfully!");
+      if (showToast) showToast("Poll submitted successfully!");
       navigate("/");
       
     } catch (err) {
