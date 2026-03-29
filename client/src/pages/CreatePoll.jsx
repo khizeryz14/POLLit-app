@@ -60,7 +60,7 @@ export default function CreatePoll({showToast}) {
     <div className="w-full flex items-center justify-center px-4 max-h-screen overflow-y-auto">
 
       <form
-        onSubmit={()=> {handleSubmit();
+        onSubmit={async ()=> {await handleSubmit();
         navigate("/");
         showToast("Poll submitted successfully!")}}
         className="w-full max-w-2xl bg-[#181824]/90 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 text-white animate-[fadeIn_.3s_ease]"
