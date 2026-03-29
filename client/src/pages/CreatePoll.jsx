@@ -2,7 +2,7 @@ import { useState } from "react";
 import { usePoll } from "../context/PollContext";
 import { useNavigate } from "react-router-dom";
 
-export default function CreatePoll({showToast}) {
+export default function CreatePoll({ showToast }) {
   const { createPoll } = usePoll();
   const navigate = useNavigate();
   const [question, setQuestion] = useState("");
@@ -27,9 +27,9 @@ export default function CreatePoll({showToast}) {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // This now works because we pass 'e' correctly below
 
-    const cleanOptions = options.filter(o => o.trim() !== "");
+    const cleanOptions = options.filter((o) => o.trim() !== "");
 
     if (!question.trim() || cleanOptions.length < 2) {
       alert("Provide a question and at least two options.");
@@ -37,7 +37,7 @@ export default function CreatePoll({showToast}) {
     }
 
     try {
-
+      // 1. Wait for the poll to be created
       await createPoll(
         question,
         cleanOptions,
@@ -45,32 +45,28 @@ export default function CreatePoll({showToast}) {
         image || null
       );
 
-      // Reset form
-      setQuestion("");
-      setDescription("");
-      setImage("");
-      setOptions(["", ""]);
-
+      // 2. Success! Show toast and redirect
+      showToast("Poll submitted successfully!");
+      navigate("/");
+      
     } catch (err) {
-      alert("Failed to create poll.");
+      console.error(err);
+      alert("Failed to create poll. Make sure you are logged in.");
     }
   };
 
   return (
     <div className="w-full flex items-center justify-center px-4 max-h-screen overflow-y-auto">
-
+      {/* FIX: Pass the function reference directly. 
+          The event object 'e' is passed automatically. 
+      */}
       <form
-        onSubmit={async ()=> {await handleSubmit();
-        navigate("/");
-        showToast("Poll submitted successfully!")}}
+        onSubmit={handleSubmit}
         className="w-full max-w-2xl bg-[#181824]/90 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 text-white animate-[fadeIn_.3s_ease]"
       >
-
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Create a Poll
-          </h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Create a Poll</h1>
           <p className="text-sm text-gray-400 mt-1">
             Ask anything. Let the crowd decide.
           </p>
@@ -78,14 +74,11 @@ export default function CreatePoll({showToast}) {
 
         {/* Question */}
         <div className="mb-6">
-          <label className="block text-sm text-gray-300 mb-2">
-            Poll Question
-          </label>
-
+          <label className="block text-sm text-gray-300 mb-2">Poll Question</label>
           <input
             type="text"
             placeholder="Which technology will dominate the next decade?"
-            value={question} 
+            value={question}
             onChange={(e) => setQuestion(e.target.value)}
             className="w-full bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:scale-[1.01] transition"
           />
@@ -96,7 +89,6 @@ export default function CreatePoll({showToast}) {
           <label className="block text-sm text-gray-300 mb-2">
             Description <span className="text-gray-500">(optional)</span>
           </label>
-
           <textarea
             placeholder="Add more context to your poll..."
             value={description}
@@ -111,7 +103,6 @@ export default function CreatePoll({showToast}) {
           <label className="block text-sm text-gray-300 mb-2">
             Image URL <span className="text-gray-500">(optional)</span>
           </label>
-
           <input
             type="text"
             placeholder="https://example.com/image.jpg"
@@ -123,24 +114,17 @@ export default function CreatePoll({showToast}) {
 
         {/* Options */}
         <div className="mb-6">
-          <label className="block text-sm text-gray-300 mb-3">
-            Options
-          </label>
-
+          <label className="block text-sm text-gray-300 mb-3">Options</label>
           <div className="space-y-3">
             {options.map((opt, i) => (
               <div key={i} className="flex items-center gap-2">
-
                 <input
                   type="text"
                   placeholder={`Option ${i + 1}`}
                   value={opt}
-                  onChange={(e) =>
-                    handleOptionChange(i, e.target.value)
-                  }
+                  onChange={(e) => handleOptionChange(i, e.target.value)}
                   className="flex-1 bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:scale-[1.01] focus:ring-indigo-500 transition"
                 />
-
                 <button
                   type="button"
                   onClick={() => removeOption(i)}
@@ -148,11 +132,9 @@ export default function CreatePoll({showToast}) {
                 >
                   ✕
                 </button>
-
               </div>
             ))}
           </div>
-
           <button
             type="button"
             onClick={addOption}
@@ -164,11 +146,11 @@ export default function CreatePoll({showToast}) {
 
         {/* Submit */}
         <button
+          type="submit"
           className="w-full mt-2 bg-gradient-to-r from-indigo-500 to-violet-600 hover:opacity-90 rounded-xl py-3 text-sm font-medium tracking-wide transition shadow-lg shadow-indigo-500/20 transition-transform duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-95 hover:scale-[1.02]"
         >
           Create Poll
         </button>
-
       </form>
     </div>
   );
