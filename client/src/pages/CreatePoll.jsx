@@ -37,15 +37,12 @@ export default function CreatePoll({ showToast }) {
     }
 
     try {
-      // 1. Wait for the poll to be created
       await createPoll(
         question,
         cleanOptions,
         description || null,
         image || null
       );
-
-      // 2. Success! Show toast and redirect
       showToast("Poll submitted successfully!");
       navigate("/");
       
@@ -57,9 +54,6 @@ export default function CreatePoll({ showToast }) {
 
   return (
     <div className="w-full flex items-center justify-center px-4 max-h-screen overflow-y-auto">
-      {/* FIX: Pass the function reference directly. 
-          The event object 'e' is passed automatically. 
-      */}
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-2xl bg-[#181824]/90 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 text-white animate-[fadeIn_.3s_ease]"
