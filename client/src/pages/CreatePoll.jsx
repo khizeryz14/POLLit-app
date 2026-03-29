@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { usePoll } from "../context/PollContext";
+import { useNavigate } from "react-router-dom";
 
-export default function CreatePoll() {
+export default function CreatePoll({showToast}) {
   const { createPoll } = usePoll();
-
+  const navigate = useNavigate();
   const [question, setQuestion] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState("");
@@ -59,7 +60,9 @@ export default function CreatePoll() {
     <div className="w-full flex items-center justify-center px-4 max-h-screen overflow-y-auto">
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={()=> {handleSubmit();
+        navigate("/");
+        showToast("Poll submitted successfully!")}}
         className="w-full max-w-2xl bg-[#181824]/90 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 text-white animate-[fadeIn_.3s_ease]"
       >
 
@@ -82,7 +85,7 @@ export default function CreatePoll() {
           <input
             type="text"
             placeholder="Which technology will dominate the next decade?"
-            value={question}
+            value={question} 
             onChange={(e) => setQuestion(e.target.value)}
             className="w-full bg-[#0f172a] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:scale-[1.01] transition"
           />
